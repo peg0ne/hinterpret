@@ -1,21 +1,24 @@
-fn add_t vector<Token> *tokens, To type, char value => do add_t(tokens, type, string(1, value))
-fn add_t vector<Token> *tokens, To type, string value =>
-    tokens->push_back(Token(type, value))
+fn add_t vector<Token> *tokens, To type, char value, int line => do add_t(tokens, type, string(1, value), line)
+fn add_t vector<Token> *tokens, To type, string value, int line =>
+    tokens->push_back(Token(type, value, line))
 ;
 
 fn tokenize Peekable<char> *iter => vector<Token>
     vector<Token> tokens = {}
     let buf = ""
+    let line = 1
     while iter->peek().is_some()
         select ch from iter->next()
             switch ch
+            case ' ' do break
             case '-'
             case '/'
             case '*'
-            case '+' dobr add_t(&tokens, To::Operator, ch)
-            case '=' dobr add_t(&tokens, To::Equals, ch)
-            case '(' dobr add_t(&tokens, To::LParen, ch)
-            case ')' dobr add_t(&tokens, To::RParen, ch)
+            case '+' dobr add_t(&tokens, To::Operator, ch, line)
+            case '=' dobr add_t(&tokens, To::Equals, ch, line)
+            case '(' dobr add_t(&tokens, To::LParen, ch, line)
+            case ')' dobr add_t(&tokens, To::RParen, ch, line)
+            case '\n' dobr add_t(&tokens, To::RParen, ch, line++)
             case '"'
                 buf = ""
                 loop
@@ -25,7 +28,7 @@ fn tokenize Peekable<char> *iter => vector<Token>
                     ;
                     break
                 ;
-                add_t(&tokens, To::StringLiteral, ch)
+                add_t(&tokens, To::StringLiteral, ch, line)
                 break
             default
                 buf = ""
@@ -35,7 +38,7 @@ fn tokenize Peekable<char> *iter => vector<Token>
                         ch = iter->peek().value_or('\n')
                         if isalpha(ch) do iter->next()
                     ;
-                    add_t(&tokens, To::Identifier, buf)
+                    add_t(&tokens, To::Identifier, buf, line)
                 ;
                 elif isdigit(ch)
                     while isdigit(ch) || ch == '.'
@@ -43,8 +46,10 @@ fn tokenize Peekable<char> *iter => vector<Token>
                         ch = iter->peek().value_or('\n')
                         if isdigit(ch) || ch == '.' do iter->next()
                     ;
-                    add_t(&tokens, To::NumberLiteral, buf)
+                    add_t(&tokens, To::NumberLiteral, buf, line)
                 ;
+                else do panic($"Unhandled character found: {string(1,ch)}")
+                break
             ;
         ;
     ;
