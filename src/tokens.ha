@@ -7,12 +7,10 @@ enum To
     NumberLiteral,
     BooleanLiteral,
     Operator,
-    None,
-;
-
-enum Keyword
+    NL,
+    Print,
     Let,
-    Func,
+    None,
 ;
 
 enum Operator
@@ -22,6 +20,7 @@ enum Operator
     Div,
     And,
     Or,
+    None,
 ;
  
 struct Token
@@ -46,11 +45,4 @@ struct Token
     fn as_str => string
         return $"{type}: '{value}' at Line: {line}"
     ;
-;
-
-fn try_id_to_keyw Token t => Option<Keyword>
-    if t.type != To::Identifier doremi None<Keyword>()
-    if t.value == "let" doremi Keyword::Let
-    if t.value == "fn" doremi Keyword::Func
-    return None<Keyword>()
 ;

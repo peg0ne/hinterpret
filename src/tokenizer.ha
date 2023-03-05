@@ -18,7 +18,7 @@ fn tokenize Peekable<char> *iter => vector<Token>
             case '=' dobr add_t(&tokens, To::Equals, ch, line)
             case '(' dobr add_t(&tokens, To::LParen, ch, line)
             case ')' dobr add_t(&tokens, To::RParen, ch, line)
-            case '\n' dobr add_t(&tokens, To::RParen, ch, line++)
+            case '\n' dobr add_t(&tokens, To::NL, ch, line++)
             case '"'
                 buf = ""
                 loop
@@ -38,7 +38,9 @@ fn tokenize Peekable<char> *iter => vector<Token>
                         ch = iter->peek().value_or('\n')
                         if isalpha(ch) do iter->next()
                     ;
-                    add_t(&tokens, To::Identifier, buf, line)
+                    if buf == "print" do add_t(&tokens, To::Print, buf, line)
+                    elif buf == "let" do add_t(&tokens, To::Let, buf, line)
+                    else do add_t(&tokens, To::Identifier, buf, line)
                 ;
                 elif isdigit(ch)
                     while isdigit(ch) || ch == '.'
