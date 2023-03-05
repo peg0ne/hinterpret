@@ -15,10 +15,49 @@ fn tokenize Peekable<char> *iter => vector<Token>
             case '/'
             case '*'
             case '+' dobr add_t(&tokens, To::Operator, ch, line)
-            case '=' dobr add_t(&tokens, To::Equals, ch, line)
             case '(' dobr add_t(&tokens, To::LParen, ch, line)
             case ')' dobr add_t(&tokens, To::RParen, ch, line)
             case '\n' dobr add_t(&tokens, To::NL, ch, line++)
+            case '&'
+                select eq from iter->peek()
+                    if eq == '&'
+                        iter->next()
+                        add_t(&tokens, To::Operator, "&&", line)
+                        break
+                    ;
+                ;
+                add_t(&tokens, To::Operator, ch, line)
+                break
+            case '|'
+                select eq from iter->peek()
+                    if eq == '|'
+                        iter->next()
+                        add_t(&tokens, To::Operator, "||", line)
+                        break
+                    ;
+                ;
+                add_t(&tokens, To::Operator, ch, line)
+                break
+            case '!'
+                select eq from iter->peek()
+                    if eq == '='
+                        iter->next()
+                        add_t(&tokens, To::Operator, "!=", line)
+                        break
+                    ;
+                ;
+                add_t(&tokens, To::Operator, ch, line)
+                break
+            case '='
+                select eq from iter->peek()
+                    if eq == '='
+                        iter->next()
+                        add_t(&tokens, To::Operator, "==", line)
+                        break
+                    ;
+                ;
+                add_t(&tokens, To::Equals, ch, line)
+                break
             case '"'
                 buf = ""
                 loop
@@ -28,7 +67,7 @@ fn tokenize Peekable<char> *iter => vector<Token>
                     ;
                     break
                 ;
-                add_t(&tokens, To::StringLiteral, ch, line)
+                add_t(&tokens, To::StringLiteral, buf, line)
                 break
             default
                 buf = ""
@@ -40,6 +79,10 @@ fn tokenize Peekable<char> *iter => vector<Token>
                     ;
                     if buf == "print" do add_t(&tokens, To::Print, buf, line)
                     elif buf == "let" do add_t(&tokens, To::Let, buf, line)
+                    elif buf == "read" do add_t(&tokens, To::Read, buf, line)
+                    elif buf == "if" do add_t(&tokens, To::If, buf, line)
+                    elif buf == "exit" do add_t(&tokens, To::Exit, buf, line)
+                    elif buf == "eval" do add_t(&tokens, To::Eval, buf, line)
                     else do add_t(&tokens, To::Identifier, buf, line)
                 ;
                 elif isdigit(ch)

@@ -15,7 +15,7 @@ struct Value
     fn eval Operator op, Value val =>
         let type = get_type()
         if op == Operator::None
-            if type == To::None
+            if type == To::None          
                 value_d = val.value_d
                 value_s = val.value_s
                 value_b = val.value_b
@@ -70,9 +70,10 @@ struct Value
         select num from val.value_d do operate_val = $"{num}"
         select boolean from val.value_b do operate_val = $"{boolean}"
         switch op
-        case Operator::Add dobr $"{value}{operate_val}"
+        case Operator::Add dobr value = $"{value}{operate_val}"
         default dobr panic($"Unhandled Operator: {op} in StringLiteral")
         ;
+        value_s = value
     ;
     fn condition Operator op, Value val =>
         let value = value_b.value_or(false)
@@ -84,11 +85,36 @@ struct Value
         default dobr panic($"Unhandled Operator: {op} in BooleanLiteral")
         ;
     ;
+    fn neq Value v_rhs => bool doremi eq(v_rhs, false)
+    fn eq Value v_rhs, bool eq = true => bool
+        select d from value_d
+            select d_rhs from v_rhs.value_d
+                return eq ? d == d_rhs : d != d_rhs
+            ;
+        ;
+        select s from value_s
+            select s_rhs from v_rhs.value_s
+                return eq ? s == s_rhs : s != s_rhs
+            ;
+        ;
+        select b from value_b
+            select b_rhs from v_rhs.value_b
+                return eq ? b == b_rhs : b == b_rhs
+            ;
+        ;
+        return false
+    ;
     fn as_str => string
         let st = $"{get_type()} "
         select d from value_d do st += $"{d} "
         select s from value_s do st += s
         select b from value_b do st += $"{b} "
         return st
+    ;
+    fn to_eval_str => string
+        select d from value_d doremi $"{d}"
+        select s from value_s doremi s
+        select b from value_b doremi $"{b}"
+        doremi "exit"
     ;
 ;

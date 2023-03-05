@@ -19,8 +19,15 @@ fn to_op_expression Token t => Expression
     elif t.value == "-" doremi Expression(Operator::Sub)
     elif t.value == "*" doremi Expression(Operator::Mul)
     elif t.value == "/" doremi Expression(Operator::Div)
+    elif t.value == "!" doremi Expression(Operator::Not)
     elif t.value == "&&" doremi Expression(Operator::And)
     elif t.value == "||" doremi Expression(Operator::Or)
+    elif t.value == "==" doremi Expression(Operator::EqEq)
+    elif t.value == "!=" doremi Expression(Operator::NotEq)
     panic($"Unhandeled Operator: {t.as_str()}")
     return Expression()
+;
+
+fn to_str_expression Token t => Expression
+    return Expression(Value(t.value))
 ;

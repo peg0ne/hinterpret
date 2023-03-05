@@ -9,7 +9,11 @@ enum To
     Operator,
     NL,
     Print,
+    Read,
     Let,
+    If,
+    Exit,
+    Eval,
     None,
 ;
 
@@ -18,8 +22,11 @@ enum Operator
     Sub,
     Mul,
     Div,
+    Not,
     And,
     Or,
+    EqEq,
+    NotEq,
     None,
 ;
  
