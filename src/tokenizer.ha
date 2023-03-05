@@ -18,6 +18,7 @@ fn tokenize Peekable<char> *iter => vector<Token>
             case '(' dobr add_t(&tokens, To::LParen, ch, line)
             case ')' dobr add_t(&tokens, To::RParen, ch, line)
             case '\n' dobr add_t(&tokens, To::NL, ch, line++)
+            case ':' dobr add_t(&tokens, To::Indent, ch, line++)
             case '&'
                 select eq from iter->peek()
                     if eq == '&'
@@ -36,7 +37,7 @@ fn tokenize Peekable<char> *iter => vector<Token>
                         break
                     ;
                 ;
-                add_t(&tokens, To::Operator, ch, line)
+                add_t(&tokens, To::Indent, ch, line)
                 break
             case '!'
                 select eq from iter->peek()
@@ -58,6 +59,17 @@ fn tokenize Peekable<char> *iter => vector<Token>
                 ;
                 add_t(&tokens, To::Equals, ch, line)
                 break
+            case '\''
+                buf = ""
+                loop
+                    select s from iter->next()
+                        if s == '\'' do break
+                        else doco buf += string(1, s)
+                    ;
+                    break
+                ;
+                add_t(&tokens, To::StringLiteral, buf, line)
+                break
             case '"'
                 buf = ""
                 loop
@@ -78,11 +90,29 @@ fn tokenize Peekable<char> *iter => vector<Token>
                         if isalpha(ch) do iter->next()
                     ;
                     if buf == "print" do add_t(&tokens, To::Print, buf, line)
+                    elif buf == "printnobr" do add_t(&tokens, To::PrintNoBr, buf, line)
                     elif buf == "let" do add_t(&tokens, To::Let, buf, line)
                     elif buf == "read" do add_t(&tokens, To::Read, buf, line)
                     elif buf == "if" do add_t(&tokens, To::If, buf, line)
                     elif buf == "exit" do add_t(&tokens, To::Exit, buf, line)
                     elif buf == "eval" do add_t(&tokens, To::Eval, buf, line)
+                    elif buf == "BLACK" do add_t(&tokens, To::StringLiteral, "\033[30m", line)
+                    elif buf == "RED" do add_t(&tokens, To::StringLiteral, "\033[31m", line)
+                    elif buf == "GREEN" do add_t(&tokens, To::StringLiteral, "\033[32m", line)
+                    elif buf == "BLUE" do add_t(&tokens, To::StringLiteral, "\033[33m", line)
+                    elif buf == "YELLOW" do add_t(&tokens, To::StringLiteral, "\033[34m", line)
+                    elif buf == "CYAN" do add_t(&tokens, To::StringLiteral, "\033[35m", line)
+                    elif buf == "MAGENTA" do add_t(&tokens, To::StringLiteral, "\033[36m", line)
+                    elif buf == "WHITE" do add_t(&tokens, To::StringLiteral, "\033[37m", line)
+                    elif buf == "RESET" do add_t(&tokens, To::StringLiteral, "\033[0m", line)
+                    elif buf == "BLACKBG" do add_t(&tokens, To::StringLiteral, "\033[40m", line)
+                    elif buf == "REDBG" do add_t(&tokens, To::StringLiteral, "\033[41m", line)
+                    elif buf == "GREENBG" do add_t(&tokens, To::StringLiteral, "\033[42m", line)
+                    elif buf == "BLUEBG" do add_t(&tokens, To::StringLiteral, "\033[43m", line)
+                    elif buf == "YELLOWBG" do add_t(&tokens, To::StringLiteral, "\033[44m", line)
+                    elif buf == "CYANBG" do add_t(&tokens, To::StringLiteral, "\033[45m", line)
+                    elif buf == "MAGENTABG" do add_t(&tokens, To::StringLiteral, "\033[46m", line)
+                    elif buf == "WHITEBG" do add_t(&tokens, To::StringLiteral, "\033[47m", line)
                     else do add_t(&tokens, To::Identifier, buf, line)
                 ;
                 elif isdigit(ch)

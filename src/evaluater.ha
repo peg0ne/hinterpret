@@ -12,22 +12,30 @@ fn next_is_type_or_panic Peekable<Token> *t, To type => Token
 ;
 
 fn eval_program Environment env, Peekable<Token> ast =>
-let skip_next_ln = false
+let skip_next_indent = false
 loop
     let token = next_or_panic(&ast)
-    if skip_next_ln
+    if skip_next_indent
         if token.type != To::NL do continue
-        else do skip_next_ln = false
+        else
+            select indent from ast.peek()
+                if indent.type != To::Indent
+                    skip_next_indent = false
+                ;
+            ;
+        ;
     ;
     switch token.type
     case To::Identifier dobr eval_id(&env, &ast, token)
     case To::Let dobr eval_let(&env, &ast)
     case To::Print dobr eval_print(&env, &ast)
+    case To::PrintNoBr dobr eval_print(&env, &ast, true)
     case To::Read dobr eval_read(&env, &ast)
-    case To::If dobr skip_next_ln = !eval_if(&env, &ast)
+    case To::If dobr skip_next_indent = !eval_if(&env, &ast)
     case To::Exit dobr exit(1)
     case To::Eval dobr eval_eval(&env, &ast)
     case To::NL do break
+    case To::Indent do break
     default dobr panic($"Token not allowed in main: {token.as_str()}")
     ;
 ;
@@ -122,7 +130,8 @@ fn eval_read Environment *env, Peekable<Token> *ast =>
     ))
 ;
 
-fn eval_print Environment *env, Peekable<Token> *ast =>
+fn eval_print Environment *env, Peekable<Token> *ast => do eval_print(env, ast, false)
+fn eval_print Environment *env, Peekable<Token> *ast, bool nolnbr =>
     let print_this = ""
     let id_found = false
     let stmt = collect_stmt(env, ast)
@@ -131,7 +140,8 @@ fn eval_print Environment *env, Peekable<Token> *ast =>
         select s from value.value_s do print_this += $"{s}"
         select d from value.value_d do print_this += $"{d}"
     ;
-    println(print_this)
+    if nolnbr do print(print_this)
+    else do println(print_this)
 ;
 
 fn eval_eval Environment *env, Peekable<Token> *ast =>
