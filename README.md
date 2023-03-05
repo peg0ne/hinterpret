@@ -1,6 +1,6 @@
 # hinterpret
  
-```
+```haskell
 let a = "Hello"
 let b = "World"
 print RED + a + " " + b + "!" + RESET
