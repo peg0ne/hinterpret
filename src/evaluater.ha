@@ -26,6 +26,8 @@ loop
         ;
     ;
     switch token.type
+    case To::FileR dobr eval_r_file(&env, &ast)
+    case To::FileW dobr eval_w_file(&env, &ast)
     case To::Identifier dobr eval_id(&env, &ast, token)
     case To::Let dobr eval_let(&env, &ast)
     case To::Print dobr eval_print(&env, &ast)
@@ -34,6 +36,7 @@ loop
     case To::If dobr skip_next_indent = !eval_if(&env, &ast)
     case To::Exit dobr exit(1)
     case To::Eval dobr eval_eval(&env, &ast)
+    case To::ToNum dobr eval_to_num(&env, &ast)
     case To::NL do break
     case To::Indent do break
     default dobr panic($"Token not allowed in main: {token.as_str()}")
@@ -41,7 +44,92 @@ loop
 ;
 ;
 
+fn eval_to_num Environment *env, Peekable<Token> *ast =>
+    let id = next_is_type_or_panic(ast, To::Identifier)
+    foreach i, var in env->variables
+        if var.identifier.value == id.value
+            env->variables[i].to_num()
+        ;
+    ;
+;
+
+fn eval_w_file Environment *env, Peekable<Token> *ast => do eval_rw_file(env, ast, false)
+fn eval_r_file Environment *env, Peekable<Token> *ast => do eval_rw_file(env, ast, true)
+fn eval_rw_file Environment *env, Peekable<Token> *ast, bool read_b =>
+    let path = ""
+    let path_token = next_or_panic(ast)
+    let content = ""
+    let content_token = next_or_panic(ast)
+    next_is_type_or_panic(ast, To::NL)
+    switch path_token.type
+    case To::StringLiteral dobr path = path_token.value
+    case To::Identifier
+        foreach var in env->variables
+            if var.identifier.value == path_token.value
+                select val from var.value
+                    if val.get_type() == To::StringLiteral
+                        path = val.value_s.value_or((string)"")
+                        break
+                    ;
+                ;
+            ;
+        ;
+        break
+    default dobr panic($"Cannot convert this to a string path {path_token.as_str()}")
+    ;
+    if !read_b
+        switch content_token.type
+        case To::StringLiteral dobr content = content_token.value
+        case To::Identifier
+            foreach var in env->variables
+                if var.identifier.value == content_token.value
+                    select val from var.value
+                        content = val.to_eval_str()
+                        break
+                    ;
+                ;
+            ;
+            break
+        default dobr panic($"Cannot convert this to string content {content_token.as_str()}")
+        ;
+    ;
+    elif content_token.type != To::Identifier
+        panic($"Expected Identifier to store read value but got: {content_token.as_str()}")
+    ;
+    if read_b && path != ""
+        select text from read(path)
+            content = text
+        ;
+        foreach i, var in env->variables
+            if var.identifier.value == content_token.value
+                env->variables[i].value = Value(content)
+                return
+            ;
+        ;
+        env->variables.push_back(Variable(
+            Token(To::StringLiteral, content_token.value, content_token.line),
+            To::StringLiteral,
+            Value(content)
+        ))
+    ;
+    elif !read_b && path != "" && content != ""
+        write(content, path)
+    ;
+;
+
 fn eval_id Environment *env, Peekable<Token> *ast, Token token =>
+    foreach i,var in env->variables
+        if var.identifier.value == token.value
+            let eq = next_is_type_or_panic(ast, To::Equals)
+            let stmt = collect_stmt(env, ast)
+            let value_opt = eval_stmt(env, stmt)
+            select value from value_opt
+                env->variables[i].value = value
+                return
+            ;
+            return
+        ;
+    ;
     panic($"Unhandled Identifier: {token.as_str()}")
 ;
 

@@ -12,10 +12,13 @@ enum To
     Print,
     PrintNoBr,
     Read,
+    FileR,
+    FileW,
     Let,
     If,
     Exit,
     Eval,
+    ToNum,
     None,
 ;
 
