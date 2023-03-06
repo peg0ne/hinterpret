@@ -47,11 +47,8 @@ loop
 
 fn eval_to_num Environment *env, Peekable<Token> *ast =>
     let id = next_is_type_or_panic(ast, To::Identifier)
-    foreach i, var in env->variables
-        if var.identifier.value == id.value
-            env->variables[i].to_num()
-        ;
-    ;
+    select var from env->try_get_variable_ptr(id.value) dore var->to_num()
+    panic($"Cannot find variable {id.as_str()}")
 ;
 
 fn eval_w_file Environment *env, Peekable<Token> *ast => do eval_rw_file(env, ast, false)
@@ -65,13 +62,11 @@ fn eval_rw_file Environment *env, Peekable<Token> *ast, bool read_b =>
     switch path_token.type
     case To::StringLiteral dobr path = path_token.value
     case To::Identifier
-        foreach var in env->variables
-            if var.identifier.value == path_token.value
-                select val from var.value
-                    if val.get_type() == To::StringLiteral
-                        path = val.value_s.value_or((string)"")
-                        break
-                    ;
+        select var from env->try_get_variable(path_token.value)
+            select val from var.value
+                if val.get_type() == To::StringLiteral
+                    path = val.value_s.value_or("")
+                    break
                 ;
             ;
         ;
@@ -82,12 +77,10 @@ fn eval_rw_file Environment *env, Peekable<Token> *ast, bool read_b =>
         switch content_token.type
         case To::StringLiteral dobr content = content_token.value
         case To::Identifier
-            foreach var in env->variables
-                if var.identifier.value == content_token.value
-                    select val from var.value
-                        content = val.to_eval_str()
-                        break
-                    ;
+            select var from env->try_get_variable(content_token.value)
+                select val from var.value
+                    content = val.to_eval_str()
+                    break
                 ;
             ;
             break
@@ -101,13 +94,11 @@ fn eval_rw_file Environment *env, Peekable<Token> *ast, bool read_b =>
         select text from read(path)
             content = text
         ;
-        foreach i, var in env->variables
-            if var.identifier.value == content_token.value
-                env->variables[i].value = Value(content)
-                return
-            ;
+        select var from env->try_get_variable_ptr(content_token.value)
+            var->value = Value(content)
+            return
         ;
-        env->variables.push_back(Variable(
+        env->variables.add(content_token.value, Variable(
             Token(To::StringLiteral, content_token.value, content_token.line),
             To::StringLiteral,
             Value(content)
@@ -125,13 +116,10 @@ fn eval_sys_call Environment *env, Peekable<Token> *ast =>
     switch cmd_token.type
     case To::StringLiteral dobr cmd = cmd_token.value
     case To::Identifier
-        foreach var in env->variables
-            if var.identifier.value == cmd_token.value
-                select val from var.value
-                    if val.get_type() == To::StringLiteral
-                        cmd = val.value_s.value_or((string)"")
-                        break
-                    ;
+        select var from env->try_get_variable(cmd_token.value)
+            select val from var.value
+                if val.get_type() == To::StringLiteral
+                    cmd = val.value_s.value_or("")
                 ;
             ;
         ;
@@ -152,13 +140,11 @@ fn eval_sys_call Environment *env, Peekable<Token> *ast =>
     case To::NL do return
     default panic($"Cannot store output to: {variable_token.as_str()}")
     ;
-    foreach i, var in env->variables
-        if var.identifier.value == variable_token.value
-            env->variables[i].value = Value(output)
-            return
-        ;
+    select var from env->try_get_variable_ptr(variable_token.value)
+        var->value = Value(output)
+        return
     ;
-    env->variables.push_back(Variable(
+    env->variables.add(variable_token.value, Variable(
         Token(To::StringLiteral, variable_token.value, variable_token.line),
         To::StringLiteral,
         Value(output)
@@ -166,17 +152,14 @@ fn eval_sys_call Environment *env, Peekable<Token> *ast =>
 ;
 
 fn eval_id Environment *env, Peekable<Token> *ast, Token token =>
-    foreach i,var in env->variables
-        if var.identifier.value == token.value
-            let eq = next_is_type_or_panic(ast, To::Equals)
-            let stmt = collect_stmt(env, ast)
-            let value_opt = eval_stmt(env, stmt)
-            select value from value_opt
-                env->variables[i].value = value
-                return
-            ;
-            return
+    select var from env->try_get_variable_ptr(token.value)
+        let eq = next_is_type_or_panic(ast, To::Equals)
+        let stmt = collect_stmt(env, ast)
+        let value_opt = eval_stmt(env, stmt)
+        select value from value_opt
+            var->value = value
         ;
+        return
     ;
     panic($"Unhandled Identifier: {token.as_str()}")
 ;
@@ -253,13 +236,11 @@ fn eval_read Environment *env, Peekable<Token> *ast =>
     let id = next_is_type_or_panic(ast, To::Identifier)
     let input = ""
     cin >> input
-    foreach i,var in env->variables
-        if var.identifier.value == id.value
-            env->variables[i].value = Value(input)
-            return
-        ;
+    select var from env->try_get_variable_ptr(id.value)
+        var->value = Value(input)
+        return
     ;
-    env->variables.push_back(Variable(
+    env->variables.add(id.value, Variable(
         Token(To::StringLiteral, id.value, id.line),
         To::StringLiteral,
         Value(input)
@@ -289,18 +270,15 @@ fn eval_eval Environment *env, Peekable<Token> *ast =>
 
 fn eval_let Environment *env, Peekable<Token> *ast =>
     let id = next_is_type_or_panic(ast, To::Identifier)
-    foreach var in env->variables
-        if id.value == var.identifier.value
-            panic($"Id '{var.identifier.value}' Is already assigned at line {var.identifier.line}")
-
-        ;
+    select var from env->try_get_variable(id.value)
+        panic($"Id '{var.identifier.value}' Is already assigned at line {var.identifier.line}")
     ;
     let eq = next_is_type_or_panic(ast, To::Equals)
     let stmt = collect_stmt(env, ast)
     select value from eval_stmt(env, stmt)
-        env->variables.push_back(Variable(id, value.get_type(), value))
+        env->variables.add(id.value, Variable(id, value.get_type(), value))
     ;
-    env->variables.push_back(Variable(id))
+    env->variables.add(id.value, Variable(id))
 ;
 fn eval_func Environment *env, Peekable<Token> *ast => do panic("eval_func Not Implemented")
 

@@ -1,17 +1,24 @@
 struct Environment
-    vector<Variable> variables = {}
-    vector<Function> functions = {}
+    Dictionary<string, Variable> variables = Dictionary<string, Variable>()
+    Dictionary<string, Function> functions = Dictionary<string, Function>()
     Environment => do return
+    fn try_get_variable string id => Option<Variable>
+        return variables.try_get_value(id)
+    ;
+    fn try_get_variable_ptr string id => Option<Variable*>
+        return variables.try_get_value_ptr(id)
+    ;
+    fn try_get_function string id => Option<Function>
+        return functions.try_get_value(id)
+    ;
+    fn try_get_function_ptr string id => Option<Function*>
+        return functions.try_get_value_ptr(id)
+    ;
 ;
 
 fn to_value_expression Environment *env, Token t => Expression
     let val = None<Value>()
-    foreach var in env->variables
-        if var.identifier.value == t.value
-            val = var.value
-            break
-        ;
-    ;
+    select var from env->try_get_variable(t.value) do val = var.value
     if val.is_none() do panic($"Cannot access value of {t.as_str()}")
     return Expression(val.value_or(Value()))
 ;

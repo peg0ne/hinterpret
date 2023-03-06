@@ -2,6 +2,7 @@ struct Variable
     Token identifier
     Option<To> type
     Option<Value> value
+    Variable => do return
     Variable Token identifier =>
         this->identifier = identifier
         this->type = To::None
