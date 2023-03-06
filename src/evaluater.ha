@@ -198,12 +198,16 @@ fn eval_id Environment *env, Peekable<Token> *ast, Token token =>
         ;
         foreach t in fun.statements do program.push_back(t)
         let new_env = Environment()
+        new_env.functions = env->functions
         eval_program(&new_env, Peekable<Token>(program))
         let arg = next_or_panic(ast)
         if arg.type == To::NL do return
         if arg.type == To::Identifier
             select r from new_env.try_get_variable("return")
                 select output from env->try_get_variable_ptr(arg.value)
+                    select type from r.type
+                        output->identifier.type = type
+                    ;
                     output->value = r.value
                     output->type = r.type
                     return
