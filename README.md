@@ -19,3 +19,11 @@ if input == "y"
 
 exit
 ```
+
+### syscalls
+alternative to read write
+```haskell
+sys "echo 'some text' > text.txt"
+sys "cat text.txt" output
+print output
+```
