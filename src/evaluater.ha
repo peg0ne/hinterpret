@@ -11,9 +11,10 @@ fn next_is_type_or_panic Peekable<Token> *t, To type => Token
     return Token()
 ;
 
-fn eval_program Environment env, Peekable<Token> ast =>
+fn eval_program Environment *env, Peekable<Token> ast =>
 let skip_next_indent = false
 loop
+    if ast.peek().is_none() do return
     let token = next_or_panic(&ast)
     if skip_next_indent
         if token.type != To::NL do continue
@@ -26,18 +27,19 @@ loop
         ;
     ;
     switch token.type
-    case To::FileR dobr eval_r_file(&env, &ast)
-    case To::FileW dobr eval_w_file(&env, &ast)
-    case To::Identifier dobr eval_id(&env, &ast, token)
-    case To::Let dobr eval_let(&env, &ast)
-    case To::Print dobr eval_print(&env, &ast)
-    case To::PrintNoBr dobr eval_print(&env, &ast, true)
-    case To::Read dobr eval_read(&env, &ast)
-    case To::If dobr skip_next_indent = !eval_if(&env, &ast)
+    case To::FileR dobr eval_r_file(env, &ast)
+    case To::FileW dobr eval_w_file(env, &ast)
+    case To::Identifier dobr eval_id(env, &ast, token)
+    case To::Let dobr eval_let(env, &ast)
+    case To::Print dobr eval_print(env, &ast)
+    case To::PrintNoBr dobr eval_print(env, &ast, true)
+    case To::Read dobr eval_read(env, &ast)
+    case To::If dobr skip_next_indent = !eval_if(env, &ast)
     case To::Exit dobr exit(1)
-    case To::Eval dobr eval_eval(&env, &ast)
-    case To::ToNum dobr eval_to_num(&env, &ast)
-    case To::SysCall dobr eval_sys_call(&env, &ast)
+    case To::Eval dobr eval_eval(env, &ast)
+    case To::ToNum dobr eval_to_num(env, &ast)
+    case To::SysCall dobr eval_sys_call(env, &ast)
+    case To::Func dobr eval_func(env, &ast)
     case To::NL do break
     case To::Indent do break
     default dobr panic($"Token not allowed in main: {token.as_str()}")
@@ -161,6 +163,56 @@ fn eval_id Environment *env, Peekable<Token> *ast, Token token =>
         ;
         return
     ;
+    select fun from env->try_get_function(token.value)
+        let val = None<Value>()
+        vector<Token> program = {}
+        program.push_back(Token(To::Let, "let", 0))
+        program.push_back(Token(To::Identifier, "return", 0))
+        program.push_back(Token(To::Equals, "=", 0))
+        program.push_back(Token(To::StringLiteral, "", 0))
+        program.push_back(Token(To::NL, "\n", 0))
+        foreach fun_arg in fun.args
+            let arg = next_or_panic(ast)
+            program.push_back(Token(To::Let, "let", fun_arg.identifier.line))
+            program.push_back(Token(To::Identifier, fun_arg.identifier.value, fun_arg.identifier.line))
+            program.push_back(Token(To::Equals, "=", fun_arg.identifier.line))
+            switch arg.type
+            case To::StringLiteral
+                select val from to_str_expression(arg).value_va
+                    program.push_back(Token(arg.type, val.to_eval_str(), arg.line))
+                ;
+                break
+            case To::NumberLiteral
+                select val from to_num_expression(arg).value_va
+                    program.push_back(Token(arg.type, val.to_eval_str(), arg.line))
+                ;
+                break
+            case To::Identifier
+                select val from to_value_expression(env, arg).value_va
+                    program.push_back(Token(arg.type, val.to_eval_str(), arg.line))
+                ;
+                break
+            default dobr panic($"Unhandled token in stmt {arg.as_str()}")
+            ;
+            program.push_back(Token(To::NL, "\n", fun_arg.identifier.line))
+        ;
+        foreach t in fun.statements do program.push_back(t)
+        let new_env = Environment()
+        eval_program(&new_env, Peekable<Token>(program))
+        let arg = next_or_panic(ast)
+        if arg.type == To::NL do return
+        if arg.type == To::Identifier
+            select r from new_env.try_get_variable("return")
+                select output from env->try_get_variable_ptr(arg.value)
+                    output->value = r.value
+                    output->type = r.type
+                    return
+                ;
+                env->variables.add(arg.value, r)
+            ;
+        ;
+        return
+    ;
     panic($"Unhandled Identifier: {token.as_str()}")
 ;
 
@@ -280,7 +332,36 @@ fn eval_let Environment *env, Peekable<Token> *ast =>
     ;
     env->variables.add(id.value, Variable(id))
 ;
-fn eval_func Environment *env, Peekable<Token> *ast => do panic("eval_func Not Implemented")
+
+fn eval_func Environment *env, Peekable<Token> *ast =>
+    let id = next_is_type_or_panic(ast, To::Identifier)
+    vector<Variable> args = {}
+    vector<Token> stmts = {}
+    select var from env->try_get_function(id.value)
+        panic($"Id '{var.identifier.value}' Is already defined at line {var.identifier.line}")
+    ;
+    loop
+        let arg = next_or_panic(ast)
+        if arg.type == To::NL do break
+        if arg.type != To::Identifier do panic($"Expected Identifier or = got: {arg.as_str()}")
+        args.push_back(Variable(arg))
+    ;
+    loop
+        let token = next_or_panic(ast)
+        if token.type != To::Indent do break
+        loop
+            token = next_or_panic(ast)
+            stmts.push_back(token)
+            if token.type == To::NL do break
+        ;
+    ;
+    if stmts.size() < 2 do panic($"No statements found in function {id.as_str()}")
+    env->functions.add(id.value, Function(
+        id,
+        args,
+        stmts
+    ))
+;
 
 fn collect_stmt Environment *env, Peekable<Token> *ast => Stmt
     vector<Expression> stmt = {}

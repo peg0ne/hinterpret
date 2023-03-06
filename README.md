@@ -27,3 +27,13 @@ sys "echo 'some text' > text.txt"
 sys "cat text.txt" output
 print output
 ```
+
+### functions
+```haskell
+fn add v t 
+    | let a = v + t
+    | return = a
+
+add 1 2 output
+print output
+```

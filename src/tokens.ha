@@ -16,6 +16,7 @@ enum To
     FileW,
     Let,
     If,
+    Func,
     Exit,
     Eval,
     ToNum,

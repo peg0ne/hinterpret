@@ -100,6 +100,7 @@ fn tokenize Peekable<char> *iter => vector<Token>
                     elif buf == "filew" do add_t(&tokens, To::FileW, buf, line)
                     elif buf == "tonum" do add_t(&tokens, To::ToNum, buf, line)
                     elif buf == "sys" do add_t(&tokens, To::SysCall, buf, line)
+                    elif buf == "fn" do add_t(&tokens, To::Func, buf, line)
                     elif buf == "BLACK" do add_t(&tokens, To::StringLiteral, "\033[30m", line)
                     elif buf == "RED" do add_t(&tokens, To::StringLiteral, "\033[31m", line)
                     elif buf == "GREEN" do add_t(&tokens, To::StringLiteral, "\033[32m", line)

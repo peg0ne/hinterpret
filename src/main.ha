@@ -17,5 +17,5 @@ fn run string content =>
     let environment = Environment()
     let iter = Peekable<char>(program)
     let ast = tokenize(&iter)
-    eval_program(environment, Peekable<Token>(ast))
+    eval_program(&environment, Peekable<Token>(ast))
 ;
