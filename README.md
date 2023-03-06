@@ -3,16 +3,19 @@
 ```haskell
 let a = "Hello"
 let b = "World"
+b = b + "!"
 print RED + a + " " + b + "!" + RESET
 
-let version = 0.1
+filer "ver.txt" version
+tonum version
 print GREEN + "Version: " + RESET + version 
 print "Update version? " + YELLOW + "(y/n)" + RESET
 printnobr RED + "> " + RESET
 read input
 if input == "y"
-    | let newversion = version + 0.1
-    | print GREEN + "Updated version to: " + RESET + newversion
+    | version = version + 0.1
+    | print GREEN + "Updated version to: " + RESET + version
+    | filew "ver.txt" version
 
 exit
 ```
