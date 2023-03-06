@@ -37,6 +37,7 @@ loop
     case To::Exit dobr exit(1)
     case To::Eval dobr eval_eval(&env, &ast)
     case To::ToNum dobr eval_to_num(&env, &ast)
+    case To::SysCall dobr eval_sys_call(&env, &ast)
     case To::NL do break
     case To::Indent do break
     default dobr panic($"Token not allowed in main: {token.as_str()}")
@@ -115,6 +116,53 @@ fn eval_rw_file Environment *env, Peekable<Token> *ast, bool read_b =>
     elif !read_b && path != "" && content != ""
         write(content, path)
     ;
+;
+
+fn eval_sys_call Environment *env, Peekable<Token> *ast =>
+    let output = ""
+    let cmd = ""
+    let cmd_token = next_or_panic(ast)
+    switch cmd_token.type
+    case To::StringLiteral dobr cmd = cmd_token.value
+    case To::Identifier
+        foreach var in env->variables
+            if var.identifier.value == cmd_token.value
+                select val from var.value
+                    if val.get_type() == To::StringLiteral
+                        cmd = val.value_s.value_or((string)"")
+                        break
+                    ;
+                ;
+            ;
+        ;
+        break
+    default dobr panic($"Cannot convert this to a string command {cmd_token.as_str()}")
+    ;
+    if cmd != ""
+        let outputs = system_output(cmd)
+        foreach i,line in outputs
+            line =  String(line).strip_end()
+            if i == 0 do output += line
+            else do output += "\n" + line
+        ;
+    ;
+    let variable_token = next_or_panic(ast)
+    switch variable_token.type
+    case To::Identifier do break
+    case To::NL do return
+    default panic($"Cannot store output to: {variable_token.as_str()}")
+    ;
+    foreach i, var in env->variables
+        if var.identifier.value == variable_token.value
+            env->variables[i].value = Value(output)
+            return
+        ;
+    ;
+    env->variables.push_back(Variable(
+        Token(To::StringLiteral, variable_token.value, variable_token.line),
+        To::StringLiteral,
+        Value(output)
+    ))
 ;
 
 fn eval_id Environment *env, Peekable<Token> *ast, Token token =>

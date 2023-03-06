@@ -19,6 +19,7 @@ enum To
     Exit,
     Eval,
     ToNum,
+    SysCall,
     None,
 ;
 
