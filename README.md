@@ -49,7 +49,7 @@ print output
 ```
 
 ### loops
-```
+```haskell
 let i = 0
 loop 0 15
     | print i
