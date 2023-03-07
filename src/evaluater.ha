@@ -29,7 +29,9 @@ loop
     switch token.type
     case To::FileR dobr eval_r_file(env, &ast)
     case To::FileW dobr eval_w_file(env, &ast)
-    case To::Identifier dobr eval_id(env, &ast, token)
+    case To::Identifier
+        if eval_id(env, &ast, token) do return
+        break
     case To::Let dobr eval_let(env, &ast)
     case To::Print dobr eval_print(env, &ast)
     case To::PrintNoBr dobr eval_print(env, &ast, true)
@@ -210,15 +212,17 @@ fn eval_sys_call Environment *env, Peekable<Token> *ast =>
     ))
 ;
 
-fn eval_id Environment *env, Peekable<Token> *ast, Token token =>
+fn eval_id Environment *env, Peekable<Token> *ast, Token token => bool
     select var from env->try_get_variable_ptr(token.literal)
-        let eq = next_is_type_or_panic(ast, To::Equals)
-        let stmt = collect_stmt(env, ast)
-        let value_opt = eval_stmt(env, stmt)
-        select value from value_opt
-            var->value = value
+        let eq = next_or_panic(ast)
+        if eq.type == To::Equals
+            let stmt = collect_stmt(env, ast)
+            let value_opt = eval_stmt(env, stmt)
+            select value from value_opt
+                var->value = value
+            ;
         ;
-        return
+        return token.literal == "return"
     ;
     select fun from env->try_get_function(token.literal)
         vector<Token> program = {}
@@ -252,20 +256,21 @@ fn eval_id Environment *env, Peekable<Token> *ast, Token token =>
         new_env.functions = env->functions
         eval_program(&new_env, Peekable<Token>(program))
         let arg = next_or_panic(ast)
-        if arg.type == To::NL do return
+        if arg.type == To::NL do return false
         if arg.type == To::Identifier
             select r from new_env.try_get_variable("return")
                 select output from env->try_get_variable_ptr(arg.literal)
                     output->value = r.value
                     output->type = r.type
-                    return
+                    return false
                 ;
                 env->variables.add(arg.literal, r)
             ;
         ;
-        return
+        return false
     ;
     panic($"Unhandled Identifier: {token.as_str()}")
+    return false
 ;
 
 fn eval_if Environment *env, Peekable<Token> *ast => bool
