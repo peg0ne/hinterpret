@@ -19,6 +19,7 @@ enum To
     Func,
     Exit,
     Eval,
+    Loop,
     ToNum,
     SysCall,
     None,
@@ -39,24 +40,20 @@ enum Operator
  
 struct Token
     To type
-    string value
+    string literal
     int line
     Token => do return
-    Token To type, int line =>
-        this->type = type
-        this->line = line
-    ;
     Token To type, char value, int line =>
         this->type = type
-        this->value = string(1, value)
+        this->literal = string(1, value)
         this->line = line
     ;
     Token To type, string value, int line =>
         this->type = type
-        this->value = value
+        this->literal = value
         this->line = line
     ;
     fn as_str => string
-        return $"{type}: '{value}' at Line: {line}"
+        return $"{type}: '{literal}' at Line: {line}"
     ;
 ;
