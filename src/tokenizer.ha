@@ -11,14 +11,28 @@ fn tokenize Peekable<char> *iter => vector<Token>
         select ch from iter->next()
             switch ch
             case ' ' do break
-            case '-'
-            case '/'
-            case '*'
-            case '+' dobr add_t(&tokens, To::Operator, ch, line)
             case '(' dobr add_t(&tokens, To::LParen, ch, line)
             case ')' dobr add_t(&tokens, To::RParen, ch, line)
             case '\n' dobr add_t(&tokens, To::NL, ch, line++)
             case ':' dobr add_t(&tokens, To::Indent, ch, line++)
+            case '-'
+            case '/'
+            case '*'
+            case '+' 
+                select eq from iter->peek()
+                    if eq == '='
+                        iter->next()
+                        switch ch
+                        case '-' dobr add_t(&tokens, To::SubEquals, "-=", line)
+                        case '+' dobr add_t(&tokens, To::AddEquals, "+=", line)
+                        case '/' dobr add_t(&tokens, To::DivEquals, "/=", line)
+                        case '*' dobr add_t(&tokens, To::MulEquals, "*=", line)
+                        ;
+                        break
+                    ;
+                ;
+                add_t(&tokens, To::Operator, ch, line)
+                break
             case '&'
                 select eq from iter->peek()
                     if eq == '&'
@@ -101,6 +115,7 @@ fn tokenize Peekable<char> *iter => vector<Token>
                     elif buf == "tonum" do add_t(&tokens, To::ToNum, buf, line)
                     elif buf == "sys" do add_t(&tokens, To::SysCall, buf, line)
                     elif buf == "fn" do add_t(&tokens, To::Func, buf, line)
+                    elif buf == "cfn" do add_t(&tokens, To::CachedFunc, buf, line)
                     elif buf == "loop" do add_t(&tokens, To::Loop, buf, line)
                     elif buf == "BLACK" do add_t(&tokens, To::StringLiteral, "\033[30m", line)
                     elif buf == "RED" do add_t(&tokens, To::StringLiteral, "\033[31m", line)

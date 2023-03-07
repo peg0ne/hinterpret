@@ -1,4 +1,8 @@
 enum To
+    SubEquals,
+    AddEquals,
+    DivEquals,
+    MulEquals,
     Equals,
     LParen,
     RParen,
@@ -17,6 +21,7 @@ enum To
     Let,
     If,
     Func,
+    CachedFunc,
     Exit,
     Eval,
     Loop,

@@ -41,7 +41,8 @@ loop
     case To::Eval dobr eval_eval(env, &ast)
     case To::ToNum dobr eval_to_num(env, &ast)
     case To::SysCall dobr eval_sys_call(env, &ast)
-    case To::Func dobr eval_func(env, &ast)
+    case To::Func dobr eval_func(env, &ast, false)
+    case To::CachedFunc dobr eval_func(env, &ast, true)
     case To::Loop dobr eval_loop(env, &ast)
     case To::NL do break
     case To::Indent do break
@@ -214,19 +215,52 @@ fn eval_sys_call Environment *env, Peekable<Token> *ast =>
 
 fn eval_id Environment *env, Peekable<Token> *ast, Token token => bool
     select var from env->try_get_variable_ptr(token.literal)
-        let eq = next_or_panic(ast)
+        select eq from ast->peek()
         if eq.type == To::Equals
+            next_or_panic(ast)
             let stmt = collect_stmt(env, ast)
             let value_opt = eval_stmt(env, stmt)
             select value from value_opt
                 var->value = value
             ;
         ;
+        elif eq.type =|= (To::AddEquals) : (To::SubEquals) : (To::DivEquals) : (To::MulEquals)
+            next_or_panic(ast)
+            select lhs from var->value
+                let stmt = collect_stmt(env, ast)
+                let value_opt = eval_stmt(env, stmt)
+                switch eq.type
+                case To::AddEquals
+                    select value from value_opt
+                        lhs.eval(Operator::Add, value)
+                    ;
+                    break
+                case To::SubEquals
+                    select value from value_opt
+                        lhs.eval(Operator::Sub, value)
+                    ;
+                    break
+                case To::DivEquals
+                    select value from value_opt
+                        lhs.eval(Operator::Div, value)
+                    ;
+                    break
+                case To::MulEquals
+                    select value from value_opt
+                        lhs.eval(Operator::Mul, value)
+                    ;
+                    break
+                ;
+                var->value = Some(lhs)
+            ;
+        ;
+        ;
         return token.literal == "return"
     ;
     select fun from env->try_get_function(token.literal)
         vector<Token> program = {}
-        foreach fun_arg in fun.args
+        let cache_str = ""
+        foreach fun_arg in fun->args
             let arg = next_or_panic(ast)
             program.push_back(Token(To::Let, "let", 0))
             program.push_back(Token(To::Identifier, fun_arg.identifier.literal, 0))
@@ -235,23 +269,41 @@ fn eval_id Environment *env, Peekable<Token> *ast, Token token => bool
             case To::StringLiteral
                 select val from to_str_expression(arg).value_va
                     program.push_back(Token(val.get_type(), val.to_eval_str(), arg.line))
+                    cache_str += val.to_eval_str()
                 ;
                 break
             case To::NumberLiteral
                 select val from to_num_expression(arg).value_va
                     program.push_back(Token(val.get_type(), val.to_eval_str(), arg.line))
+                    cache_str += val.to_eval_str()
                 ;
                 break
             case To::Identifier
                 select val from to_value_expression(env, arg).value_va
                     program.push_back(Token(val.get_type(), val.to_eval_str(), arg.line))
+                    cache_str += val.to_eval_str()
                 ;
                 break
             default dobr panic($"Unhandled token in stmt {arg.as_str()}")
             ;
             program.push_back(Token(To::NL, "\n", arg.line))
         ;
-        foreach t in fun.statements do program.push_back(t)
+        if fun->allow_cache && fun->cache.contains(cache_str)
+            select var from fun->cache.try_get_value(cache_str)
+                let arg = next_or_panic(ast)
+                if arg.type == To::NL do return false
+                if arg.type == To::Identifier
+                    select output from env->try_get_variable_ptr(arg.literal)
+                        output->value = var.value
+                        output->type = var.type
+                        return false
+                    ;
+                    env->variables.add(arg.literal, var)
+                    return false
+                ;
+            ;
+        ;
+        foreach t in fun->statements do program.push_back(t)
         let new_env = Environment()
         new_env.functions = env->functions
         eval_program(&new_env, Peekable<Token>(program))
@@ -259,6 +311,7 @@ fn eval_id Environment *env, Peekable<Token> *ast, Token token => bool
         if arg.type == To::NL do return false
         if arg.type == To::Identifier
             select r from new_env.try_get_variable("return")
+                if fun->allow_cache do fun->cache.add(cache_str,r)
                 select output from env->try_get_variable_ptr(arg.literal)
                     output->value = r.value
                     output->type = r.type
@@ -390,7 +443,7 @@ fn eval_let Environment *env, Peekable<Token> *ast =>
     env->variables.add(id.literal, Variable(id))
 ;
 
-fn eval_func Environment *env, Peekable<Token> *ast =>
+fn eval_func Environment *env, Peekable<Token> *ast, bool allow_cache =>
     let id = next_is_type_or_panic(ast, To::Identifier)
     vector<Variable> args = {}
     vector<Token> stmts = {}
@@ -400,7 +453,7 @@ fn eval_func Environment *env, Peekable<Token> *ast =>
     stmts.push_back(Token(To::StringLiteral, "", 0))
     stmts.push_back(Token(To::NL, "\n", 0))
     select var from env->try_get_function(id.literal)
-        panic($"Id '{var.identifier.literal}' Is already defined at line {var.identifier.line}")
+        panic($"Id '{var->identifier.literal}' Is already defined at line {var->identifier.line}")
     ;
     loop
         let arg = next_or_panic(ast)
@@ -421,10 +474,11 @@ fn eval_func Environment *env, Peekable<Token> *ast =>
         ;
     ;
     if stmts.size() < 2 do panic($"No statements found in function {id.as_str()}")
-    env->functions.add(id.literal, Function(
+    env->functions.add(id.literal, new Function(
         id,
         args,
-        stmts
+        stmts,
+        allow_cache
     ))
 ;
 

@@ -1,6 +1,6 @@
 struct Environment
     Dictionary<string, Variable> variables = Dictionary<string, Variable>()
-    Dictionary<string, Function> functions = Dictionary<string, Function>()
+    Dictionary<string, Function*> functions = Dictionary<string, Function*>()
     Environment => do return
     fn try_get_variable string id => Option<Variable>
         return variables.try_get_value(id)
@@ -8,11 +8,8 @@ struct Environment
     fn try_get_variable_ptr string id => Option<Variable*>
         return variables.try_get_value_ptr(id)
     ;
-    fn try_get_function string id => Option<Function>
+    fn try_get_function string id => Option<Function*>
         return functions.try_get_value(id)
-    ;
-    fn try_get_function_ptr string id => Option<Function*>
-        return functions.try_get_value_ptr(id)
     ;
 ;
 
