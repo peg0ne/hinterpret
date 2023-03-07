@@ -3,7 +3,7 @@
 ```haskell
 let a = "Hello"
 let b = "World"
-b = b + "!"
+b += "!"
 print RED + a + " " + b + "!" + RESET
 
 filer "ver.txt" version
@@ -31,9 +31,27 @@ print output
 ### functions
 ```haskell
 fn add v t 
-    | let a = v + t
-    | return = a
+    | return = a + t
 
 add 1 2 output
 print output
+```
+
+### caching functions
+these functions will cache the result
+they will skip processing the function if cached result is found and just return the cached result
+```haskell
+cfn add v t 
+    | return = a + t
+
+add 1 2 output
+print output
+```
+
+### loops
+```
+let i = 0
+loop 0 15
+    | print i
+    | i += 1
 ```
