@@ -424,7 +424,7 @@ fn eval_print Environment *env, Peekable<Token> *ast, bool nolnbr =>
 fn eval_eval Environment *env, Peekable<Token> *ast =>
     let stmt = collect_stmt(env, ast)
     select value from eval_stmt(env, stmt)
-        run(value.to_eval_str()+"\n")
+        run(value.to_eval_str()+"\n", 0, {})
     ;
 ;
 

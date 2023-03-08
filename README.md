@@ -87,3 +87,11 @@ let el = li at 1
 print el
 print li at 1
 ```
+### command arguments
+example arguments hello world "!"
+```haskell
+//print 3
+print argc
+//print [hello,world,!]
+print argv
+```
