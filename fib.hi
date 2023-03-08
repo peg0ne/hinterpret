@@ -1,0 +1,17 @@
+cfn fib n 
+    | if n == 0 || n == 1
+    |   | return = n
+    | n -= 1
+    | fib n outa
+    | n -= 1
+    | fib n outb
+    | return = outa + outb
+
+let i = 0
+
+loop 0 25
+    | fib i out
+    | print out
+    | i += 1
+
+exit
