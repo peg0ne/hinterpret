@@ -107,3 +107,9 @@ print argc
 //print [hello,world,!]
 print argv
 ```
+
+### importing functions
+```
+//.hi is implicit
+import "filewithfunctions"
+```
