@@ -1,12 +1,18 @@
 struct Value
     Option<double> value_d
+    Option<int> value_i
     Option<string> value_s
     Option<bool> value_b
     Value => do return
-    Value double value => do value_d = Some(value)
+    Value int value => do value_i = Some(value)
+    Value double value =>
+        if (int)value == value do value_i = Some((int)value)
+        else do value_d = Some(value)
+    ;
     Value string value => do value_s = Some(value)
     Value bool value => do value_b = Some(value)
     fn get_type => To
+        if value_i.is_some() doremi To::NumberLiteral
         if value_d.is_some() doremi To::NumberLiteral
         if value_s.is_some() doremi To::StringLiteral
         if value_b.is_some() doremi To::BooleanLiteral
@@ -15,7 +21,8 @@ struct Value
     fn eval Operator op, Value val =>
         let type = get_type()
         if op == Operator::None
-            if type == To::None          
+            if type == To::None
+                value_i = val.value_i
                 value_d = val.value_d
                 value_s = val.value_s
                 value_b = val.value_b
@@ -49,8 +56,8 @@ struct Value
         ;
     ;
     fn operate Operator op, Value val =>
-        let value = value_d.value_or(0.0)
-        let operate_val = val.value_d.value_or(0.0)
+        let value = value_d.is_some() ? value_d.value_or(0.0) : value_i.value_or(0)
+        let operate_val = val.value_d.is_some() ? val.value_d.value_or(0.0) : val.value_i.value_or(0)
         if val.get_type() == To::StringLiteral do panic($"Cannot {op} to {get_type()} with {val.get_type()}")
         if val.get_type() == To::BooleanLiteral
             operate_val = val.value_b.value_or(false) ? 1.0 : 0.0
@@ -62,11 +69,19 @@ struct Value
         case Operator::Div dobr value /= operate_val
         default dobr panic($"Unhandled Operator: {op} in NumberLiteral")
         ;
-        value_d = Some(value)
+        if (int)value == value
+            value_d = None<double>()
+            value_i = Some((int)value)
+        ;
+        else
+            value_i = None<int>()
+            value_d = Some(value)
+        ;
     ;
     fn concat Operator op, Value val =>
         let value = value_s.value_or((string)"")
         let operate_val = val.value_s.value_or((string)"")
+        select i_num from val.value_i do operate_val = $"{i_num}"
         select num from val.value_d do operate_val = $"{num}"
         select boolean from val.value_b do operate_val = $"{boolean}"
         switch op
@@ -87,9 +102,20 @@ struct Value
     ;
     fn neq Value v_rhs => bool doremi eq(v_rhs, false)
     fn eq Value v_rhs, bool eq = true => bool
+        select i from value_i
+            select d_rhs from v_rhs.value_d
+                return eq ? i == d_rhs : i != d_rhs
+            ;
+            select i_rhs from v_rhs.value_i
+                return eq ? i == i_rhs : i != i_rhs
+            ;
+        ;
         select d from value_d
             select d_rhs from v_rhs.value_d
                 return eq ? d == d_rhs : d != d_rhs
+            ;
+            select i_rhs from v_rhs.value_i
+                return eq ? d == i_rhs : d != i_rhs
             ;
         ;
         select s from value_s
@@ -106,13 +132,15 @@ struct Value
     ;
     fn as_str => string
         let st = $"{get_type()} "
+        select i from value_i do st += $"{i} "
         select d from value_d do st += $"{d} "
         select s from value_s do st += s
         select b from value_b do st += $"{b} "
         return st
     ;
     fn to_eval_str => string
-        select d from value_d doremi $"{d}"
+        select i from value_i doremi $"{i}"
+        select d from value_d doremi (int)d == d ? $"{(int)d}" : $"{d}"
         select s from value_s doremi s
         select b from value_b doremi $"{b}"
         doremi "exit"

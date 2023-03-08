@@ -415,9 +415,7 @@ fn eval_print Environment *env, Peekable<Token> *ast, bool nolnbr =>
     let id_found = false
     let stmt = collect_stmt(env, ast)
     select value from eval_stmt(env, stmt)
-        select b from value.value_b do print_this += $"{b}"
-        select s from value.value_s do print_this += $"{s}"
-        select d from value.value_d do print_this += $"{d}"
+        print_this += value.to_eval_str()
     ;
     if nolnbr do print(print_this)
     else do println(print_this)
