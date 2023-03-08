@@ -40,6 +40,7 @@ enum Operator
     Div,
     Not,
     And,
+    At,
     Or,
     EqEq,
     NotEq,

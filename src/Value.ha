@@ -70,6 +70,7 @@ struct Value
             switch op
             case Operator::Add
             case Operator::Sub dobr li_operate(op, val)
+            case Operator::At dobr li_at(val)
             default dobr panic($"Operator: {op} not allowed for ListLiterals")
             ;
         ;
@@ -109,6 +110,30 @@ struct Value
             break
         ;
         value_l = list
+    ;
+    fn li_at Value at =>
+        select list from value_l
+            if at.value_d.is_none() && at.value_i.is_none()
+                panic($"Cannot access value at {at.to_eval_str()}")
+            ;
+            let at_value = at.value_d.value_or(0.0) + at.value_i.value_or(0)
+            if at_value > list.values.len()
+                panic($"Cannot accces value at {(int)at_value} Index out of range: {list.values.len()}")
+            ;
+            value_l = None<ListValue>()
+            println(at_value)
+            let new_val = list.values.at(at_value)
+            switch new_val.get_type()
+            case To::StringLiteral dobr this->value_s = new_val.value_s
+            case To::NumberLiteral
+                this->value_d = new_val.value_d
+                this->value_i = new_val.value_i
+                break
+            case To::ListLiteral dobr this->value_l = new_val.value_l
+            case To::BooleanLiteral dobr this->value_b = new_val.value_b
+            default panic("Invalid type {new_val.as_str()}")
+            ;
+        ;
     ;
     fn concat Operator op, Value val =>
         let value = value_s.value_or((string)"")

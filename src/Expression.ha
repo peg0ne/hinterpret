@@ -26,7 +26,8 @@ fn to_op_expression Token t => Expression
     elif t.literal == "||" doremi Expression(Operator::Or)
     elif t.literal == "==" doremi Expression(Operator::EqEq)
     elif t.literal == "!=" doremi Expression(Operator::NotEq)
-    panic($"Unhandeled Operator: {t.as_str()}")
+    elif t.literal == "at" doremi Expression(Operator::At)
+    panic($"Unhandled Operator: {t.as_str()}")
     return Expression()
 ;
 

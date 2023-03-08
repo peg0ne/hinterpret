@@ -76,3 +76,14 @@ li += 3
 li -= 2
 print li
 ```
+
+access values
+```haskell
+let li = []
+li += 1
+li += 2
+li += 3
+let el = li at 1
+print el
+print li at 1
+```
