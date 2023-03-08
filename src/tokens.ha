@@ -41,6 +41,7 @@ enum Operator
     Not,
     And,
     At,
+    Len,
     Or,
     EqEq,
     NotEq,

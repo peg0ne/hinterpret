@@ -517,7 +517,23 @@ fn eval_stmt Environment *env, Stmt stmt => Option<Value>
             default dobr panic($"Unhandled type {val_type}")
             ;
         ;
-        select op from expr.value_op doco current_op = op
+        select op from expr.value_op 
+            current_op = op
+            if current_op == Operator::Len
+                if type == To::ListLiteral
+                    select list from value.value_l
+                        value = Value(list.values.len())
+                    ;
+                ;
+                elif type == To::StringLiteral
+                    select text from value.value_s
+                        value = Value((int)text.size())
+                    ;
+                ;
+                else do panic($"Cannot do operation len on {type}")
+            ;
+            continue
+        ;
     ;
     return value
 ;
