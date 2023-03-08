@@ -55,3 +55,24 @@ loop 0 15
     | print i
     | i += 1
 ```
+
+### lists
+prints [Hello, ,World,!]
+```haskell
+let li = []
+li += "Hello"
+li += " "
+li += "World"
+li += "!"
+print li
+```
+remove from list
+prints [1,3]
+```haskell
+let li = []
+li += 1
+li += 2
+li += 3
+li -= 2
+print li
+```

@@ -30,6 +30,10 @@ fn to_op_expression Token t => Expression
     return Expression()
 ;
 
+fn to_list_expression Token t => Expression
+    return Expression(Value(ListValue()))
+;
+
 fn to_str_expression Token t => Expression
     return Expression(Value(t.literal))
 ;

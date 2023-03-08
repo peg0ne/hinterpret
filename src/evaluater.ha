@@ -487,6 +487,7 @@ fn collect_stmt Environment *env, Peekable<Token> *ast => Stmt
         switch token.type
         case To::StringLiteral dobr stmt.push_back(to_str_expression(token))
         case To::NumberLiteral dobr stmt.push_back(to_num_expression(token))
+        case To::ListLiteral dobr stmt.push_back(to_list_expression(token))
         case To::Operator dobr stmt.push_back(to_op_expression(token))
         case To::Identifier dobr stmt.push_back(to_value_expression(env, token))
         case To::NL doremi Stmt(stmt)
@@ -507,9 +508,10 @@ fn eval_stmt Environment *env, Stmt stmt => Option<Value>
             ;
             if type == To::None do type = val_type
             switch val_type
-            case To::StringLiteral dobr value.eval(current_op, val)
-            case To::NumberLiteral dobr value.eval(current_op, val)
-            case To::BooleanLiteral dobr value.eval(current_op, val)
+            case To::StringLiteral
+            case To::NumberLiteral
+            case To::BooleanLiteral
+            case To::ListLiteral dobr value.eval(current_op, val)
             default dobr panic($"Unhandled type {val_type}")
             ;
         ;

@@ -95,6 +95,16 @@ fn tokenize Peekable<char> *iter => vector<Token>
                 ;
                 add_t(&tokens, To::StringLiteral, buf, line)
                 break
+            case '['
+                select r from iter->peek()
+                    if r == ']'
+                        iter->next()
+                        add_t(&tokens, To::ListLiteral, "[]", line)
+                        break
+                    ;
+                ;
+                panic("Did you mean to initialize a list? please check that it looks like this '[]'")
+                break
             default
                 buf = ""
                 if isalpha(ch)
