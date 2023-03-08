@@ -56,6 +56,7 @@ struct Value
         case To::StringLiteral
             switch op
             case Operator::Add dobr concat(op, val)
+            case Operator::At dobr li_at(val)
             default dobr panic($"Operator: {op} not allowed for StringLiterals")
             ;
             break
@@ -112,6 +113,11 @@ struct Value
         value_l = list
     ;
     fn li_at Value at =>
+        select text from value_s
+            let as_list = ListValue()
+            foreach ch in text do as_list.values.add(string(1, ch))
+            value_l = Some(as_list)
+        ;
         select list from value_l
             if at.value_d.is_none() && at.value_i.is_none()
                 panic($"Cannot access value at {at.to_eval_str()}")
@@ -121,7 +127,6 @@ struct Value
                 panic($"Cannot accces value at {(int)at_value} Index out of range: {list.values.len()}")
             ;
             value_l = None<ListValue>()
-            println(at_value)
             let new_val = list.values.at(at_value)
             switch new_val.get_type()
             case To::StringLiteral dobr this->value_s = new_val.value_s

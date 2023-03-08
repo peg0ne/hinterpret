@@ -87,6 +87,18 @@ let el = li at 1
 print el
 print li at 1
 ```
+
+get lengths
+```haskell
+let li = []
+li += 1
+li += 2
+li += 3
+print li len
+let text = "hello"
+print text len
+```
+
 ### command arguments
 example arguments hello world "!"
 ```haskell
