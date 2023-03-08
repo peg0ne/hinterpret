@@ -109,7 +109,7 @@ print argv
 ```
 
 ### importing functions
-```
+```haskell
 //.hi is implicit
 import "filewithfunctions"
 ```
