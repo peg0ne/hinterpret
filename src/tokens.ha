@@ -23,6 +23,7 @@ enum To
     FileW,
     Let,
     If,
+    Import,
     Func,
     CachedFunc,
     Exit,

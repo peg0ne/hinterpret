@@ -11,6 +11,13 @@ struct Environment
     fn try_get_function string id => Option<Function*>
         return functions.try_get_value(id)
     ;
+    fn destruct =>
+        foreach key in functions.keys()
+            select f from functions.try_get_value(key)
+                delete(f)
+            ;
+        ;
+    ;
 ;
 
 fn to_value_expression Environment *env, Token t => Expression

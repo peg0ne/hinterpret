@@ -11,7 +11,7 @@ fn next_is_type_or_panic Peekable<Token> *t, To type => Token
     return Token()
 ;
 
-fn eval_program Environment *env, Peekable<Token> ast =>
+fn eval_program Environment *env, Peekable<Token> ast, bool should_exit =>
 let skip_next_indent = false
 loop
     if ast.peek().is_none() do return
@@ -37,8 +37,12 @@ loop
     case To::PrintNoBr dobr eval_print(env, &ast, true)
     case To::Read dobr eval_read(env, &ast)
     case To::If dobr skip_next_indent = !eval_if(env, &ast)
-    case To::Exit dobr exit(1)
-    case To::Eval dobr eval_eval(env, &ast)
+    case To::Exit
+        if should_exit do exit(1)
+        else do return
+        break
+    case To::Eval dobr eval_eval(env, &ast, false)
+    case To::Import dobr eval_eval(env, &ast, true)
     case To::ToNum dobr eval_to_num(env, &ast)
     case To::SysCall dobr eval_sys_call(env, &ast)
     case To::Func dobr eval_func(env, &ast, false)
@@ -108,7 +112,7 @@ fn eval_loop Environment *env, Peekable<Token> *ast =>
     if stmts.size() < 1 do panic($"Loop contains nothing")
     let peekable_ast = Peekable<Token>(stmts)
     while start < end
-        eval_program(env, peekable_ast)
+        eval_program(env, peekable_ast, false)
         start++
     ;
 ;
@@ -306,7 +310,7 @@ fn eval_id Environment *env, Peekable<Token> *ast, Token token => bool
         foreach t in fun->statements do program.push_back(t)
         let new_env = Environment()
         new_env.functions = env->functions
-        eval_program(&new_env, Peekable<Token>(program))
+        eval_program(&new_env, Peekable<Token>(program), false)
         let arg = next_or_panic(ast)
         if arg.type == To::NL do return false
         if arg.type == To::Identifier
@@ -421,10 +425,20 @@ fn eval_print Environment *env, Peekable<Token> *ast, bool nolnbr =>
     else do println(print_this)
 ;
 
-fn eval_eval Environment *env, Peekable<Token> *ast =>
+fn eval_eval Environment *env, Peekable<Token> *ast, bool fetch_funcs =>
     let stmt = collect_stmt(env, ast)
     select value from eval_stmt(env, stmt)
-        run(value.to_eval_str()+"\n", 0, {})
+        if fetch_funcs
+            select program from read($"{value.to_eval_str()}.hi")
+                let new_env = run(program, 0, {}, false)
+                env->functions.steal(new_env.functions)
+            ;
+            panic($"Unable to import {value.to_eval_str()}.hi")
+        ;
+        else
+            let new_env = run(value.to_eval_str()+"\n", 0, {}, false)
+            new_env.destruct()
+        ;
     ;
 ;
 

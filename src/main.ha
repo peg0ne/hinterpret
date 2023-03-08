@@ -8,10 +8,10 @@ fn main =>
     if argc < 2
         panic($"Usage {argv[0]} <filename>")
     ;
-    select content from read(argv[1]) do run(content, argc, argv)
+    select content from read(argv[1]) do run(content, argc, argv, true)
 ;
 
-fn run string content, int argc, char **argv =>
+fn run string content, int argc, char **argv, bool should_exit => Environment
     vector<char> program = {}
     foreach i in content do program.push_back(i)
     let environment = Environment()
@@ -34,5 +34,6 @@ fn run string content, int argc, char **argv =>
     )
     let iter = Peekable<char>(program)
     let ast = tokenize(&iter)
-    eval_program(&environment, Peekable<Token>(ast))
+    eval_program(&environment, Peekable<Token>(ast), should_exit)
+    return environment
 ;

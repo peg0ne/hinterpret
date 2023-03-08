@@ -77,6 +77,13 @@ fn tokenize Peekable<char> *iter => vector<Token>
                 buf = ""
                 loop
                     select s from iter->next()
+                        if s == '\\'
+                            if iter->peek().value_or(' ') == 'n'
+                                buf += string(1, '\n')
+                                iter->next()
+                                continue
+                            ;
+                        ;
                         if s == '\'' do break
                         else doco buf += string(1, s)
                     ;
@@ -88,6 +95,13 @@ fn tokenize Peekable<char> *iter => vector<Token>
                 buf = ""
                 loop
                     select s from iter->next()
+                        if s == '\\'
+                            if iter->peek().value_or(' ') == 'n'
+                                buf += string(1, '\n')
+                                iter->next()
+                                continue
+                            ;
+                        ;
                         if s == '"' do break
                         else doco buf += string(1, s)
                     ;
@@ -115,6 +129,7 @@ fn tokenize Peekable<char> *iter => vector<Token>
                     ;
                     if buf == "at" do add_t(&tokens, To::Operator, buf, line)
                     elif buf == "len" do add_t(&tokens, To::Operator, buf, line)
+                    elif buf == "import" do add_t(&tokens, To::Import, buf, line)
                     elif buf == "print" do add_t(&tokens, To::Print, buf, line)
                     elif buf == "printnobr" do add_t(&tokens, To::PrintNoBr, buf, line)
                     elif buf == "let" do add_t(&tokens, To::Let, buf, line)
