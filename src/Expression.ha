@@ -37,7 +37,6 @@ fn to_list_expression Token t => Expression
     s = String(s).replace("]", "")
     let values = String(s).split(',')
     let lival = ListValue()
-    println(t.literal)
     foreach val in values
         if val == "" do continue
         let num = String(val).to_num()
