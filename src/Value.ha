@@ -231,7 +231,9 @@ struct Value
     ;
     fn to_eval_str => string
         select i from value_i doremi $"{i}"
-        select d from value_d doremi (int)d == d ? $"{(int)d}" : $"{d}"
+        select d from value_d
+            return (int)d == d ? $"{(int)d}" : String($"{d}").replace(",", ".")
+        ;
         select s from value_s doremi s
         select b from value_b doremi $"{b}"
         select list from value_l
