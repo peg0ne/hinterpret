@@ -22,7 +22,9 @@ struct Environment
 
 fn to_value_expression Environment *env, Token t => Expression
     let val = None<Value>()
-    select var from env->try_get_variable(t.literal) do val = var.value
+    select var from env->try_get_variable(t.literal)
+        val = var.value
+    ;
     select num from String(t.literal).to_num()
         return Value(num)
     ;

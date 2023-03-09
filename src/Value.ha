@@ -119,6 +119,9 @@ struct Value
             value_l = Some(as_list)
         ;
         select list from value_l
+            if list.values.len() == 0
+                panic($"List contains no values")
+            ;
             if at.value_d.is_none() && at.value_i.is_none()
                 panic($"Cannot access value at {at.to_eval_str()}")
             ;

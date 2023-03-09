@@ -526,9 +526,7 @@ fn eval_stmt Environment *env, Stmt stmt => Option<Value>
             case To::StringLiteral
             case To::NumberLiteral
             case To::BooleanLiteral
-            case To::ListLiteral
-                value.eval(current_op, val)
-                break
+            case To::ListLiteral dobr value.eval(current_op, val)
             default dobr panic($"Unhandled type {val_type}")
             ;
         ;

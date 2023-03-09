@@ -33,7 +33,25 @@ fn to_op_expression Token t => Expression
 ;
 
 fn to_list_expression Token t => Expression
-    return Expression(Value(ListValue()))
+    let s = String(t.literal).replace("[", "")
+    s = String(s).replace("]", "")
+    let values = String(s).split(',')
+    let lival = ListValue()
+    println(t.literal)
+    foreach val in values
+        if val == "" do continue
+        let num = String(val).to_num()
+        if val =|= "false" : "true"
+            lival.values.add(Value(val == "true"))
+        ;
+        elif num.is_some()
+            lival.values.add(Value(num.value_or(0)))
+        ;
+        else
+            lival.values.add(Value(val))
+        ;
+    ;
+    return Expression(Value(lival))
 ;
 
 fn to_str_expression Token t => Expression
