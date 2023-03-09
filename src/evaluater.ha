@@ -432,6 +432,7 @@ fn eval_eval Environment *env, Peekable<Token> *ast, bool fetch_funcs =>
             select program from read($"{value.to_eval_str()}.hi")
                 let new_env = run(program, 0, {}, false)
                 env->functions.steal(new_env.functions)
+                return
             ;
             panic($"Unable to import {value.to_eval_str()}.hi")
         ;
