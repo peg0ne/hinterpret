@@ -1,4 +1,4 @@
-get => print, peekable, stringextensions, files, dictionary
+get => print, peekable, stringextensions, files, dictionary, ncurses
 get => tokens, panic
 get => Value, Expression, Stmt, Variable, Function
 get => Environment

@@ -5,6 +5,7 @@ fn add_t vector<Token> *tokens, To type, string value, int line =>
 
 fn tokenize Peekable<char> *iter => vector<Token>
     vector<Token> tokens = {}
+    let n = Ncurses()
     let buf = ""
     let line = 1
     while iter->peek().is_some()
@@ -117,6 +118,7 @@ fn tokenize Peekable<char> *iter => vector<Token>
                         break
                     ;
                 ;
+                n.stop()
                 panic("Did you mean to initialize a list? please check that it looks like this '[]'")
                 break
             default
@@ -161,6 +163,8 @@ fn tokenize Peekable<char> *iter => vector<Token>
                     elif buf == "CYANBG" do add_t(&tokens, To::StringLiteral, "\033[45m", line)
                     elif buf == "MAGENTABG" do add_t(&tokens, To::StringLiteral, "\033[46m", line)
                     elif buf == "WHITEBG" do add_t(&tokens, To::StringLiteral, "\033[47m", line)
+                    elif buf == "COLS" do add_t(&tokens, To::NumberLiteral, $"{COLS}", line)
+                    elif buf == "LINES" do add_t(&tokens, To::NumberLiteral, $"{LINES}", line)
                     else do add_t(&tokens, To::Identifier, buf, line)
                 ;
                 elif isdigit(ch)
@@ -171,10 +175,14 @@ fn tokenize Peekable<char> *iter => vector<Token>
                     ;
                     add_t(&tokens, To::NumberLiteral, buf, line)
                 ;
-                else do panic($"Unhandled character found: {string(1,ch)}")
+                else
+                    panic($"Unhandled character found: {string(1,ch)}")
+                    n.stop()
+                ;
                 break
             ;
         ;
     ;
+    n.stop()
     return tokens
 ;
