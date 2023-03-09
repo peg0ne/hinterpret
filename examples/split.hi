@@ -12,6 +12,8 @@ fn split text separator
     | | if ch != separator
     | | | buf += ch
     | | i += 1
+    | if buf != ""
+    | | lines += buf
     | return = lines
 
 exit
