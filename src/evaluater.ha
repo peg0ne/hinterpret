@@ -124,15 +124,18 @@ fn eval_rw_file Environment *env, Peekable<Token> *ast, bool read_b =>
 fn eval_sys_call Environment *env, Peekable<Token> *ast =>
     let output = ""
     let cmd = token_to_string(env, next_or_panic(ast), true)
+    let variable_token = next_or_panic(ast)
     if cmd == "" do panic($"Command cannot be executed since it's empty")
+    if variable_token.type == To::NL
+        let x = system(cmd)
+        return
+    ;
     let outputs = system_output(cmd)
     foreach i,line in outputs
         line =  String(line).strip_end()
         if i == 0 do output += line
         else do output += "\n" + line
     ;
-    let variable_token = next_or_panic(ast)
-    if variable_token.type == To::NL do return
     env->assign_var(variable_token, Value(output))
 ;
 
