@@ -75,6 +75,9 @@ fn tokenize Peekable<char> *iter => vector<Token>
                         if isalpha(ch) do iter->next()
                     ;
                     if buf =|= "at" : "len" do add_t(&tokens, To::Operator, buf, line)
+                    elif buf == "is" do add_t(&tokens, To::Operator, "==", line)
+                    elif buf == "or" do add_t(&tokens, To::Operator, "||", line)
+                    elif buf == "and" do add_t(&tokens, To::Operator, "&&", line)
                     elif buf == "import" do add_t(&tokens, To::Import, buf, line)
                     elif buf == "random" do add_t(&tokens, To::Random, buf, line)
                     elif buf == "print" do add_t(&tokens, To::Print, buf, line)
