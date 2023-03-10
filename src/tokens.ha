@@ -69,7 +69,5 @@ struct Token
         this->literal = value
         this->line = line
     ;
-    fn as_str => string
-        return $"{type}: '{literal}' at Line: {line}"
-    ;
+    fn as_str => string doremi $"{type}: '{literal}' at Line: {line}"
 ;

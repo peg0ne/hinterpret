@@ -2,9 +2,7 @@ get => list
 struct ListValue
     List<Value> values = List<Value>()
     ListValue => do return
-    ListValue vector<Value> values =>
-        this->values = values
-    ;
+    ListValue vector<Value> values => do this->values = values
 ;
 
 struct Value
@@ -28,8 +26,9 @@ struct Value
         if value_s.is_some() doremi To::StringLiteral
         if value_b.is_some() doremi To::BooleanLiteral
         if value_l.is_some() doremi To::ListLiteral
-        else doremi To::None
+        return To::None
     ;
+    fn number_value => double doremi value_i.value_or(0) + value_d.value_or(0.0)
     fn eval Operator op, Value val =>
         let type = get_type()
         if op == Operator::None
@@ -147,7 +146,9 @@ struct Value
         let value = value_s.value_or((string)"")
         let operate_val = val.value_s.value_or((string)"")
         select i_num from val.value_i do operate_val = $"{i_num}"
-        select num from val.value_d do operate_val = $"{num}"
+        select d from val.value_d
+            operate_val = (int)d == d ? $"{(int)d}" : String($"{d}").replace(",", ".")
+        ;
         select boolean from val.value_b do operate_val = $"{boolean}"
         select list from val.value_l
             operate_val = "["
@@ -172,6 +173,18 @@ struct Value
         case Operator::Or dobr value = value || operate_val
         default dobr panic($"Unhandled Operator: {op} in BooleanLiteral")
         ;
+    ;
+    fn proc_condition Operator op, Value val => bool
+        switch op
+        case Operator::EqEq doremi eq(val)
+        case Operator::NotEq doremi neq(val)
+        case Operator::More doremi lessmore(val, true, false)
+        case Operator::Less doremi lessmore(val, false, false)
+        case Operator::MoreEq doremi lessmore(val, true, true)
+        case Operator::LessEq doremi lessmore(val, false, true)
+        default dobr panic($"Unhandled Operator: {op} in condition")
+        ;
+        return false
     ;
     fn neq Value v_rhs => bool doremi eq(v_rhs, false)
     fn eq Value v_rhs, bool eq = true => bool

@@ -21,109 +21,50 @@ fn tokenize Peekable<char> *iter => vector<Token>
             case '-'
             case '/'
             case '*'
-            case '+' 
-                select eq from iter->peek()
-                    if eq == '='
-                        iter->next()
-                        switch ch
-                        case '-' dobr add_t(&tokens, To::SubEquals, "-=", line)
-                        case '+' dobr add_t(&tokens, To::AddEquals, "+=", line)
-                        case '/' dobr add_t(&tokens, To::DivEquals, "/=", line)
-                        case '*' dobr add_t(&tokens, To::MulEquals, "*=", line)
-                        case '<' dobr add_t(&tokens, To::Operator, "<=", line)
-                        case '>' dobr add_t(&tokens, To::Operator, ">=", line)
+            case '+'
+                select pair from try_collect_pair(iter, ch, '=')
+                    switch ch
+                        case '-' dobr add_t(&tokens, To::SubEquals, pair, line)
+                        case '+' dobr add_t(&tokens, To::AddEquals, pair, line)
+                        case '/' dobr add_t(&tokens, To::DivEquals, pair, line)
+                        case '*' dobr add_t(&tokens, To::MulEquals, pair, line)
+                        case '<'
+                        case '>' dobr add_t(&tokens, To::Operator, pair, line)
                         ;
-                        break
-                    ;
+                    break
                 ;
                 add_t(&tokens, To::Operator, ch, line)
                 break
             case '&'
-                select eq from iter->peek()
-                    if eq == '&'
-                        iter->next()
-                        add_t(&tokens, To::Operator, "&&", line)
-                        break
-                    ;
-                ;
+                select pair from try_collect_pair(iter, ch) dobr add_t(&tokens, To::Operator, ch, line)
                 add_t(&tokens, To::Operator, ch, line)
                 break
             case '|'
-                select eq from iter->peek()
-                    if eq == '|'
-                        iter->next()
-                        add_t(&tokens, To::Operator, "||", line)
-                        break
-                    ;
-                ;
+                select pair from try_collect_pair(iter, ch) dobr add_t(&tokens, To::Operator, pair, line)
                 add_t(&tokens, To::Indent, ch, line)
                 break
             case '!'
-                select eq from iter->peek()
-                    if eq == '='
-                        iter->next()
-                        add_t(&tokens, To::Operator, "!=", line)
-                        break
-                    ;
-                ;
+                select pair from try_collect_pair(iter, ch, '=') dobr add_t(&tokens, To::Operator, pair, line)
                 add_t(&tokens, To::Operator, ch, line)
                 break
             case '='
-                select eq from iter->peek()
-                    if eq == '='
-                        iter->next()
-                        add_t(&tokens, To::Operator, "==", line)
-                        break
-                    ;
-                ;
+                select pair from try_collect_pair(iter, ch) dobr add_t(&tokens, To::Operator, pair, line)
                 add_t(&tokens, To::Equals, ch, line)
                 break
             case '\''
-                buf = ""
-                loop
-                    select s from iter->next()
-                        if s == '\\'
-                            if iter->peek().value_or(' ') == 'n'
-                                buf += string(1, '\n')
-                                iter->next()
-                                continue
-                            ;
-                        ;
-                        if s == '\'' do break
-                        else doco buf += string(1, s)
-                    ;
-                    break
-                ;
-                add_t(&tokens, To::StringLiteral, buf, line)
-                break
             case '"'
-                buf = ""
-                loop
-                    select s from iter->next()
-                        if s == '\\'
-                            if iter->peek().value_or(' ') == 'n'
-                                buf += string(1, '\n')
-                                iter->next()
-                                continue
-                            ;
-                        ;
-                        if s == '"' do break
-                        else doco buf += string(1, s)
-                    ;
+                select collected from try_collect_between(iter, ch)
+                    add_t(&tokens, To::StringLiteral, collected, line)
                     break
                 ;
-                add_t(&tokens, To::StringLiteral, buf, line)
+                pair_panic(&n, $"String not properly closed at Line: {line}")
                 break
             case '['
-                select r from iter->peek()
-                    if r == ']'
-                        iter->next()
-                        add_t(&tokens, To::ListLiteral, "[]", line)
-                        break
-                    ;
+                select pair from try_collect_pair(iter, ch, ']')
+                    add_t(&tokens, To::ListLiteral, pair, line)
+                    break
                 ;
-                n.stop()
-                panic("Did you mean to initialize a list? please check that it looks like this '[]'")
+                pair_panic(&n, $"Did you mean to initialize a list? please check that it looks like this '[]' at Line: {line}")
                 break
             default
                 buf = ""
@@ -133,8 +74,7 @@ fn tokenize Peekable<char> *iter => vector<Token>
                         ch = iter->peek().value_or('\n')
                         if isalpha(ch) do iter->next()
                     ;
-                    if buf == "at" do add_t(&tokens, To::Operator, buf, line)
-                    elif buf == "len" do add_t(&tokens, To::Operator, buf, line)
+                    if buf =|= "at" : "len" do add_t(&tokens, To::Operator, buf, line)
                     elif buf == "import" do add_t(&tokens, To::Import, buf, line)
                     elif buf == "random" do add_t(&tokens, To::Random, buf, line)
                     elif buf == "print" do add_t(&tokens, To::Print, buf, line)
@@ -180,14 +120,47 @@ fn tokenize Peekable<char> *iter => vector<Token>
                     ;
                     add_t(&tokens, To::NumberLiteral, buf, line)
                 ;
-                else
-                    panic($"Unhandled character found: {string(1,ch)}")
-                    n.stop()
-                ;
+                else do pair_panic(&n, $"Unhandled character found: {string(1,ch)} at Line: {line}")
                 break
             ;
         ;
     ;
     n.stop()
     return tokens
+;
+
+fn pair_panic Ncurses *n, string message =>
+    n->stop()
+    panic(message)
+;
+
+fn try_collect_pair Peekable<char> *iter, char pair => Option<string> doremi try_collect_pair(iter, pair, pair)
+fn try_collect_pair Peekable<char> *iter, char first, char second => Option<string>
+    let combo = $"{string(1,first)}{string(1,second)}"
+    select p from iter->peek()
+        if p == second
+            iter->next()
+            return Some(combo)
+        ;
+    ;
+    return None<string>()
+;
+
+fn try_collect_between Peekable<char> *iter, char end => Option<string>
+    let collected = ""
+    loop
+        select ch from iter->next()
+            if ch == '\\'
+                if iter->peek().value_or(' ') == 'n'
+                    collected += string(1, '\n')
+                    iter->next()
+                    continue
+                ;
+            ;
+            if ch == end do break
+            else doco collected += string(1, ch)
+        ;
+        return None<string>()
+    ;
+    return Some(collected)
 ;
