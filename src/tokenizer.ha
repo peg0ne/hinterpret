@@ -16,6 +16,8 @@ fn tokenize Peekable<char> *iter => vector<Token>
             case ')' dobr add_t(&tokens, To::RParen, ch, line)
             case '\n' dobr add_t(&tokens, To::NL, ch, line++)
             case ':' dobr add_t(&tokens, To::Indent, ch, line++)
+            case '<'
+            case '>'
             case '-'
             case '/'
             case '*'
@@ -28,6 +30,8 @@ fn tokenize Peekable<char> *iter => vector<Token>
                         case '+' dobr add_t(&tokens, To::AddEquals, "+=", line)
                         case '/' dobr add_t(&tokens, To::DivEquals, "/=", line)
                         case '*' dobr add_t(&tokens, To::MulEquals, "*=", line)
+                        case '<' dobr add_t(&tokens, To::Operator, "<=", line)
+                        case '>' dobr add_t(&tokens, To::Operator, ">=", line)
                         ;
                         break
                     ;

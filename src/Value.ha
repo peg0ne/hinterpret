@@ -213,6 +213,14 @@ struct Value
         ;
         return false
     ;
+    fn lessmore Value v_rhs, bool more, bool eq => bool
+        if get_type() != To::NumberLiteral do panic($"Cannot do lessmore operation on {as_str()}")
+        if v_rhs.get_type() != To::NumberLiteral do panic($"Cannot do lessmore operation on {v_rhs.as_str()}")
+        let lhs = value_d.value_or(0.0) + value_i.value_or(0)
+        let rhs = v_rhs.value_d.value_or(0.0) + v_rhs.value_i.value_or(0)
+        if more doremi eq ? lhs >= rhs : lhs > rhs
+        else doremi eq ? lhs <= rhs : lhs < rhs
+    ;
     fn as_str => string
         let st = $"{get_type()} "
         select i from value_i do st += $"{i} "

@@ -441,6 +441,54 @@ fn eval_if Environment *env, Peekable<Token> *ast => bool
                         current_value = l.neq(r)
                     ;;
                     break
+                case Operator::More
+                    select l from lhs
+                    select r from rhs
+                        select comb from combiner
+                            switch comb
+                            case Operator::And dobr current_value = current_value && l.lessmore(r, true, false)
+                            case Operator::Or dobr current_value = current_value || l.lessmore(r, true, false)
+                            ;
+                        ;
+                        current_value = l.lessmore(r, true, false)
+                    ;;
+                    break
+                case Operator::Less
+                    select l from lhs
+                    select r from rhs
+                        select comb from combiner
+                            switch comb
+                            case Operator::And dobr current_value = current_value && l.lessmore(r, false, false)
+                            case Operator::Or dobr current_value = current_value || l.lessmore(r, false, false)
+                            ;
+                        ;
+                        current_value = l.lessmore(r, false, false)
+                    ;;
+                    break
+                case Operator::MoreEq
+                    select l from lhs
+                    select r from rhs
+                        select comb from combiner
+                            switch comb
+                            case Operator::And dobr current_value = current_value && l.lessmore(r, true, true)
+                            case Operator::Or dobr current_value = current_value || l.lessmore(r, true, true)
+                            ;
+                        ;
+                        current_value = l.lessmore(r, true, true)
+                    ;;
+                    break
+                case Operator::LessEq
+                    select l from lhs
+                    select r from rhs
+                        select comb from combiner
+                            switch comb
+                            case Operator::And dobr current_value = current_value && l.lessmore(r, false, true)
+                            case Operator::Or dobr current_value = current_value || l.lessmore(r, false, true)
+                            ;
+                        ;
+                        current_value = l.lessmore(r, false, true)
+                    ;;
+                    break
                 default dobr panic($"Operator not implemented in if {oper}")
                 ;
             ;
