@@ -1,17 +1,15 @@
 fn split text separator
-    | let i = 0
     | let lines = []
     | let buf = ""
     | let ch = ""
     | let textlen = text len
-    | for 0 textlen
+    | for i textlen
     | | ch = text at i
     | | if ch == separator
     | | | lines += buf
     | | | buf = ""
     | | if ch != separator
     | | | buf += ch
-    | | i += 1
     | if buf != ""
     | | lines += buf
     | return = lines

@@ -3,9 +3,7 @@ import "split"
 filer "test.hi" text
 split text "\n" lines
 let linelen = lines len
-let i = 0
-for 0 linelen
+for i linelen
     | print lines at i
-    | i += 1
 
 exit

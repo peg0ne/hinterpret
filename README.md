@@ -57,9 +57,8 @@ loop
     | print i
     | i += 1
 
-for 0 10
-    | print i
-    | i += 1
+for j 10
+    | print j
 ```
 
 ### lists

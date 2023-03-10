@@ -83,14 +83,23 @@ fn eval_loop Environment *env, Peekable<Token> *ast =>
 ;
 
 fn eval_for Environment *env, Peekable<Token> *ast =>
-    let start = (int)token_to_number(env, next_or_panic(ast))
+    let start_token = next_or_panic(ast)
+    let is_id = start_token.type == To::Identifier
+    let existed = env->try_get_variable(start_token.literal).is_some()
+    let start = existed ? (int)token_to_number(env, start_token) : 0
     let end = (int)token_to_number(env, next_or_panic(ast))
     let nl = next_is_type_or_panic(ast, To::NL)
     let stmts = collect_indent_stmt(ast)
     if stmts.size() < 1 do panic($"Loop contains nothing")
     while start < end
+        if is_id
+            env->assign_var(start_token, Value(start))
+        ;
         if eval_program(env, stmts, false) do break
         start++
+    ;
+    if !existed
+        env->variables.remove(start_token.literal)
     ;
 ;
 
