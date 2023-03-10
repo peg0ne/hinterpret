@@ -35,6 +35,7 @@ loop
     case To::Let dobr eval_let(env, &ast)
     case To::Print dobr eval_print(env, &ast)
     case To::PrintNoBr dobr eval_print(env, &ast, true)
+    case To::Random dobr eval_random(env, &ast)
     case To::Read dobr eval_read(env, &ast)
     case To::If dobr skip_next_indent = !eval_if(env, &ast)
     case To::Exit
@@ -59,6 +60,59 @@ fn eval_to_num Environment *env, Peekable<Token> *ast =>
     let id = next_is_type_or_panic(ast, To::Identifier)
     select var from env->try_get_variable_ptr(id.literal) dore var->to_num()
     panic($"Cannot find variable {id.as_str()}")
+;
+
+fn eval_random Environment *env, Peekable<Token> *ast =>
+    let min = next_or_panic(ast)
+    let max = next_or_panic(ast)
+    let min_i = 0
+    let max_i = 0
+    switch min.type
+    case To::StringLiteral
+    case To::ListLiteral
+    case To::BooleanLiteral dobr panic($"Cannot convert {min.as_str()} to a number")
+    case To::NumberLiteral dobr min_i = (int)(String(min.literal).to_num().value_or(0.0))
+    case To::Identifier
+        select var from env->try_get_variable(min.literal)
+            select val from var.value
+                if val.get_type() == To::NumberLiteral
+                    min_i = val.value_i.value_or(0.0) + val.value_d.value_or(0.0)
+                    break
+                ;
+            ;
+        ;
+        panic($"Variable is not type of number literal {min.as_str()}")
+        break
+    ;
+    switch max.type
+    case To::StringLiteral
+    case To::ListLiteral
+    case To::BooleanLiteral dobr panic($"Cannot convert {max.as_str()} to a number")
+    case To::NumberLiteral dobr max_i = (int)(String(max.literal).to_num().value_or(0.0))
+    case To::Identifier
+        select var from env->try_get_variable(max.literal)
+            select val from var.value
+                if val.get_type() == To::NumberLiteral
+                    max_i = val.value_i.value_or(0.0) + val.value_d.value_or(0.0)
+                    break
+                ;
+            ;
+        ;
+        panic($"Variable is not type of number literal {max.as_str()}")
+        break
+    ;
+    let out = next_is_type_or_panic(ast, To::Identifier)
+    let random = (rand() % max_i) + min_i
+    select var from env->try_get_variable_ptr(out.literal)
+        var->type = Some(To::NumberLiteral)
+        var->value = Some(Value(random))
+        return
+    ;
+    env->variables.add(out.literal, Variable(
+        out,
+        To::NumberLiteral,
+        Value(random)
+    ))
 ;
 
 fn eval_loop Environment *env, Peekable<Token> *ast =>

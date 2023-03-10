@@ -26,6 +26,7 @@ enum To
     Import,
     Func,
     CachedFunc,
+    Random,
     Exit,
     Eval,
     Loop,

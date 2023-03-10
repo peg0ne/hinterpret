@@ -113,3 +113,11 @@ print argv
 //.hi is implicit
 import "filewithfunctions"
 ```
+
+### random
+```haskell
+let min = 0
+let max = 100
+random min max output
+print output
+```

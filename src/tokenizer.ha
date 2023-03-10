@@ -132,6 +132,7 @@ fn tokenize Peekable<char> *iter => vector<Token>
                     if buf == "at" do add_t(&tokens, To::Operator, buf, line)
                     elif buf == "len" do add_t(&tokens, To::Operator, buf, line)
                     elif buf == "import" do add_t(&tokens, To::Import, buf, line)
+                    elif buf == "random" do add_t(&tokens, To::Random, buf, line)
                     elif buf == "print" do add_t(&tokens, To::Print, buf, line)
                     elif buf == "printnobr" do add_t(&tokens, To::PrintNoBr, buf, line)
                     elif buf == "let" do add_t(&tokens, To::Let, buf, line)

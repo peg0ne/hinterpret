@@ -8,6 +8,7 @@ fn main =>
     if argc < 2
         panic($"Usage {argv[0]} <filename>")
     ;
+    srand(time(NULL))
     select content from read(argv[1]) do run(content, argc, argv, true)
 ;
 
