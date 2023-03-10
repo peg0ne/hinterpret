@@ -51,7 +51,13 @@ print output
 ### loops
 ```haskell
 let i = 0
-loop 0 15
+loop
+    | if i == 10
+    | | break
+    | print i
+    | i += 1
+
+for 0 10
     | print i
     | i += 1
 ```
