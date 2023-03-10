@@ -8,7 +8,9 @@ struct Expression
 
 fn to_num_expression Token t => Expression
     let s = String(t.literal)
-    while s.ends_with("00") do s.remove_back(1)
+    if s.contains(".")
+        while s.ends_with("00") do s.remove_back(1)
+    ;
     select num from s.to_num()
         return Expression(Value(num))
     ;

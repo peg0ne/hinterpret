@@ -11,10 +11,10 @@ fn next_is_type_or_panic Peekable<Token> *t, To type => Token
     return Token()
 ;
 
-fn eval_program Environment *env, Peekable<Token> ast, bool should_exit =>
+fn eval_program Environment *env, Peekable<Token> ast, bool should_exit => bool
 let skip_next_indent = false
 loop
-    if ast.peek().is_none() do return
+    if ast.peek().is_none() doremi false
     let token = next_or_panic(&ast)
     if skip_next_indent
         if token.type != To::NL do continue
@@ -30,7 +30,7 @@ loop
     case To::FileR dobr eval_r_file(env, &ast)
     case To::FileW dobr eval_w_file(env, &ast)
     case To::Identifier
-        if eval_id(env, &ast, token) do return
+        if eval_id(env, &ast, token) doremi true
         break
     case To::Let dobr eval_let(env, &ast)
     case To::Print dobr eval_print(env, &ast)
@@ -40,7 +40,7 @@ loop
     case To::If dobr skip_next_indent = !eval_if(env, &ast)
     case To::Exit
         if should_exit do exit(1)
-        else do return
+        else doremi true
         break
     case To::Eval dobr eval_eval(env, &ast, false)
     case To::Import dobr eval_eval(env, &ast, true)
@@ -49,11 +49,14 @@ loop
     case To::Func dobr eval_func(env, &ast, false)
     case To::CachedFunc dobr eval_func(env, &ast, true)
     case To::Loop dobr eval_loop(env, &ast)
+    case To::For dobr eval_for(env, &ast)
     case To::NL
     case To::Indent do break
+    case To::Break doremi true
     default dobr panic($"Token not allowed in main: {token.as_str()}")
     ;
 ;
+return false
 ;
 
 fn eval_to_num Environment *env, Peekable<Token> *ast =>
@@ -71,13 +74,22 @@ fn eval_random Environment *env, Peekable<Token> *ast =>
 ;
 
 fn eval_loop Environment *env, Peekable<Token> *ast =>
+    next_is_type_or_panic(ast, To::NL)
+    let stmts = collect_indent_stmt(ast)
+    if stmts.size() < 1 do panic($"Loop contains nothing")
+    loop
+        if eval_program(env, stmts, false) do break
+    ;
+;
+
+fn eval_for Environment *env, Peekable<Token> *ast =>
     let start = (int)token_to_number(env, next_or_panic(ast))
     let end = (int)token_to_number(env, next_or_panic(ast))
     let nl = next_is_type_or_panic(ast, To::NL)
     let stmts = collect_indent_stmt(ast)
     if stmts.size() < 1 do panic($"Loop contains nothing")
     while start < end
-        eval_program(env, stmts, false)
+        if eval_program(env, stmts, false) do break
         start++
     ;
 ;

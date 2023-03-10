@@ -94,6 +94,8 @@ fn tokenize Peekable<char> *iter => vector<Token>
                     elif buf == "fn" do add_t(&tokens, To::Func, buf, line)
                     elif buf == "cfn" do add_t(&tokens, To::CachedFunc, buf, line)
                     elif buf == "loop" do add_t(&tokens, To::Loop, buf, line)
+                    elif buf == "for" do add_t(&tokens, To::For, buf, line)
+                    elif buf == "break" do add_t(&tokens, To::Break, buf, line)
                     elif buf == "BLACK" do add_t(&tokens, To::StringLiteral, "\033[30m", line)
                     elif buf == "RED" do add_t(&tokens, To::StringLiteral, "\033[31m", line)
                     elif buf == "GREEN" do add_t(&tokens, To::StringLiteral, "\033[32m", line)

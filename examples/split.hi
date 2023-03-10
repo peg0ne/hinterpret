@@ -4,7 +4,7 @@ fn split text separator
     | let buf = ""
     | let ch = ""
     | let textlen = text len
-    | loop 0 textlen
+    | for 0 textlen
     | | ch = text at i
     | | if ch == separator
     | | | lines += buf

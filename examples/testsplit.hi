@@ -1,12 +1,10 @@
 import "split"
 
-print "helo"
-
 filer "test.hi" text
 split text "\n" lines
 let linelen = lines len
 let i = 0
-loop 0 linelen
+for 0 linelen
     | print lines at i
     | i += 1
 
