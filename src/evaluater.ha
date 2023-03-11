@@ -188,6 +188,7 @@ fn eval_id Environment *env, Peekable<Token> *ast, Token token => bool
         let cache_str = ""
         let new_env = Environment()
         new_env.functions = env->functions
+        new_env.assign_var(Token("return", To::Identifier, 0))
         foreach t in fun->statements do program.push_back(t)
         foreach fun_arg in fun->args
             let arg = next_or_panic(ast)
@@ -341,11 +342,6 @@ fn eval_func Environment *env, Peekable<Token> *ast, bool allow_cache =>
     let id = next_is_type_or_panic(ast, To::Identifier)
     vector<Variable> args = {}
     vector<Token> stmts = {}
-    stmts.push_back(Token(To::Let, "let", 0))
-    stmts.push_back(Token(To::Identifier, "return", 0))
-    stmts.push_back(Token(To::Equals, "=", 0))
-    stmts.push_back(Token(To::StringLiteral, "", 0))
-    stmts.push_back(Token(To::NL, "\n", 0))
     select var from env->try_get_function(id.literal)
         panic($"Id '{var->identifier.literal}' Is already defined at line {var->identifier.line}")
     ;

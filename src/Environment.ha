@@ -23,6 +23,11 @@ struct Environment
         ;
         return None<double>()
     ;
+    fn assign_var Token id =>
+        if id.type != To::Identifier do panic($"Cannot store value into {id.as_str()}")
+        select var from try_get_variable_ptr(id.literal) do return
+        variables.add(id.literal, Variable(id))
+    ;
     fn assign_var Token id, Value v =>
         if id.type != To::Identifier do panic($"Cannot store value into {id.as_str()}")
         select var from try_get_variable_ptr(id.literal)
