@@ -188,7 +188,7 @@ fn eval_id Environment *env, Peekable<Token> *ast, Token token => bool
         let cache_str = ""
         let new_env = Environment()
         new_env.functions = env->functions
-        new_env.assign_var(Token("return", To::Identifier, 0))
+        new_env.assign_var(Token(To::Identifier, "return", 0))
         foreach t in fun->statements do program.push_back(t)
         foreach fun_arg in fun->args
             let arg = next_or_panic(ast)
