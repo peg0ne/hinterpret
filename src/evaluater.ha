@@ -186,33 +186,38 @@ fn eval_id Environment *env, Peekable<Token> *ast, Token token => bool
     select fun from env->try_get_function(token.literal)
         vector<Token> program = {}
         let cache_str = ""
+        let new_env = Environment()
+        new_env.functions = env->functions
+        foreach t in fun->statements do program.push_back(t)
         foreach fun_arg in fun->args
             let arg = next_or_panic(ast)
-            program.push_back(Token(To::Let, "let", 0))
-            program.push_back(Token(To::Identifier, fun_arg.identifier.literal, 0))
-            program.push_back(Token(To::Equals, "=", 0))
             switch arg.type
             case To::StringLiteral
-                select val from to_str_expression(arg).value_va
-                    program.push_back(Token(val.get_type(), val.to_eval_str(), arg.line))
-                    cache_str += val.to_eval_str()
-                ;
+                cache_str += arg.literal
+                new_env.assign_var(fun_arg.identifier, Value(arg.literal))
+                break
+            case To::BooleanLiteral
+                cache_str += arg.literal
+                new_env.assign_var(fun_arg.identifier, Value(arg.literal == "true"))
+                break
+            case To::ListLiteral
+                cache_str += arg.literal
+                new_env.assign_var(fun_arg.identifier, Value(ListValue()))
                 break
             case To::NumberLiteral
+                cache_str += arg.literal
                 select val from to_num_expression(arg).value_va
-                    program.push_back(Token(val.get_type(), val.to_eval_str(), arg.line))
-                    cache_str += val.to_eval_str()
+                    new_env.assign_var(fun_arg.identifier, val)
                 ;
                 break
             case To::Identifier
-                select val from to_value_expression(env, arg).value_va
-                    program.push_back(Token(val.get_type(), val.to_eval_str(), arg.line))
-                    cache_str += val.to_eval_str()
+                select var from env->try_get_variable(arg.literal)
+                    cache_str += var.value.value_or(Value()).to_eval_str()
+                    new_env.assign_var(fun_arg.identifier, var.value.value_or(Value()))
                 ;
                 break
             default dobr panic($"Unhandled token in stmt {arg.as_str()}")
             ;
-            program.push_back(Token(To::NL, "\n", arg.line))
         ;
         if fun->allow_cache && fun->cache.contains(cache_str)
             select var from fun->cache.try_get_value(cache_str)
@@ -222,9 +227,6 @@ fn eval_id Environment *env, Peekable<Token> *ast, Token token => bool
                 return false
             ;
         ;
-        foreach t in fun->statements do program.push_back(t)
-        let new_env = Environment()
-        new_env.functions = env->functions
         eval_program(&new_env, Peekable<Token>(program), false)
         let arg = next_or_panic(ast)
         if arg.type == To::NL do return false
