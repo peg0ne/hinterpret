@@ -61,7 +61,7 @@ struct Value
             break
         case To::BooleanLiteral
             switch op
-            case Operator::And dobr
+            case Operator::And
             case Operator::Or dobr condition(op, val)
             default dobr panic($"Operator: {op} not allowed for BooleanLiterals")
             ;
@@ -138,7 +138,7 @@ struct Value
                 break
             case To::ListLiteral dobr this->value_l = new_val.value_l
             case To::BooleanLiteral dobr this->value_b = new_val.value_b
-            default panic("Invalid type {new_val.as_str()}")
+            default dobr panic("Invalid type {new_val.as_str()}")
             ;
         ;
     ;
