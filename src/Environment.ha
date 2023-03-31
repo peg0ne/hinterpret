@@ -71,7 +71,7 @@ fn token_to_number Environment *env, Token t => double
         ;
         panic($"Variable is not type of number literal {t.as_str()}")
         break
-    default panic($"Expected number or identifier got: {t.as_str()}")
+    default dobr panic($"Expected number or identifier got: {t.as_str()}")
     ;
     return 0
 ;
