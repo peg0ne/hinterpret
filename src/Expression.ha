@@ -19,22 +19,22 @@ fn to_num_expression Token t => Expression
 ;
 
 fn to_op_expression Token t => Expression
-    let op match t.literal
-        "+" => doremi Operator::Add
-        "-" => doremi Operator::Sub
-        "*" => doremi Operator::Mul
-        "/" => doremi Operator::Div
-        "<" => doremi Operator::Less
-        ">" => doremi Operator::More
-        "<=" => doremi Operator::LessEq
-        ">=" => doremi Operator::MoreEq
-        "!" => doremi Operator::Not
-        "&&" => doremi Operator::And
-        "||" => doremi Operator::Or
-        "==" => doremi Operator::EqEq
-        "!=" => doremi Operator::NotEq
-        "at" => doremi Operator::At
-        "len" => doremi Operator::Len
+    let op = match t.literal
+        "+" => do Operator::Add
+        "-" => do Operator::Sub
+        "*" => do Operator::Mul
+        "/" => do Operator::Div
+        "<" => do Operator::Less
+        ">" => do Operator::More
+        "<=" => do Operator::LessEq
+        ">=" => do Operator::MoreEq
+        "!" => do Operator::Not
+        "&&" => do Operator::And
+        "||" => do Operator::Or
+        "==" => do Operator::EqEq
+        "!=" => do Operator::NotEq
+        "at" => do Operator::At
+        "len" => do Operator::Len
         _ => 
             panic($"Unhandled Operator: {t.as_str()}")
             Operator::Add
