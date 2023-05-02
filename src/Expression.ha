@@ -19,23 +19,28 @@ fn to_num_expression Token t => Expression
 ;
 
 fn to_op_expression Token t => Expression
-    if t.literal == "+" doremi Expression(Operator::Add)
-    elif t.literal == "-" doremi Expression(Operator::Sub)
-    elif t.literal == "*" doremi Expression(Operator::Mul)
-    elif t.literal == "/" doremi Expression(Operator::Div)
-    elif t.literal == "<" doremi Expression(Operator::Less)
-    elif t.literal == ">" doremi Expression(Operator::More)
-    elif t.literal == "<=" doremi Expression(Operator::LessEq)
-    elif t.literal == ">=" doremi Expression(Operator::MoreEq)
-    elif t.literal == "!" doremi Expression(Operator::Not)
-    elif t.literal == "&&" doremi Expression(Operator::And)
-    elif t.literal == "||" doremi Expression(Operator::Or)
-    elif t.literal == "==" doremi Expression(Operator::EqEq)
-    elif t.literal == "!=" doremi Expression(Operator::NotEq)
-    elif t.literal == "at" doremi Expression(Operator::At)
-    elif t.literal == "len" doremi Expression(Operator::Len)
-    panic($"Unhandled Operator: {t.as_str()}")
-    return Expression()
+    let op match t.literal
+        "+" => doremi Operator::Add
+        "-" => doremi Operator::Sub
+        "*" => doremi Operator::Mul
+        "/" => doremi Operator::Div
+        "<" => doremi Operator::Less
+        ">" => doremi Operator::More
+        "<=" => doremi Operator::LessEq
+        ">=" => doremi Operator::MoreEq
+        "!" => doremi Operator::Not
+        "&&" => doremi Operator::And
+        "||" => doremi Operator::Or
+        "==" => doremi Operator::EqEq
+        "!=" => doremi Operator::NotEq
+        "at" => doremi Operator::At
+        "len" => doremi Operator::Len
+        _ => 
+            panic($"Unhandled Operator: {t.as_str()}")
+            Operator::Add
+        ;
+    ;
+    return Expression(op)
 ;
 
 fn to_list_expression Token t => Expression
