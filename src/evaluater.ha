@@ -1,3 +1,6 @@
+inc => future
+compiler => "-pthread"
+
 fn next_or_panic Peekable<Token> *t => Token
     select token from t->next() doremi token
     panic($"<- Ended")
@@ -48,6 +51,7 @@ loop
     case To::SysCall dobr eval_sys_call(env, &ast)
     case To::Func dobr eval_func(env, &ast, false)
     case To::CachedFunc dobr eval_func(env, &ast, true)
+    case To::AsyncFunc dobr async(launch::async, eval_func, env, &ast, true)
     case To::Loop dobr eval_loop(env, &ast)
     case To::For dobr eval_for(env, &ast)
     case To::NL

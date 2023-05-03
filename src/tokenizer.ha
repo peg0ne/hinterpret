@@ -95,6 +95,7 @@ fn tokenize Peekable<char> *iter => vector<Token>
                     "sys" => do add_t(&tokens, To::SysCall, buf, line)
                     "fn" => do add_t(&tokens, To::Func, buf, line)
                     "cfn" => do add_t(&tokens, To::CachedFunc, buf, line)
+                    "afn" => do add_t(&tokens, To::AsyncFunc, buf, line)
                     "loop" => do add_t(&tokens, To::Loop, buf, line)
                     "for" => do add_t(&tokens, To::For, buf, line)
                     "break" => do add_t(&tokens, To::Break, buf, line)
