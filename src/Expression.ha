@@ -67,3 +67,7 @@ fn to_list_expression Token t => Expression
 fn to_str_expression Token t => Expression
     return Expression(Value(t.literal))
 ;
+
+fn to_boolean_expression Token t => Expression
+    return Expression(Value(t.literal))
+;

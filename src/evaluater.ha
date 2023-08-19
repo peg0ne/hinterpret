@@ -388,6 +388,7 @@ fn collect_stmt Environment *env, Peekable<Token> *ast => Stmt
         case To::StringLiteral dobr stmt.push_back(to_str_expression(token))
         case To::NumberLiteral dobr stmt.push_back(to_num_expression(token))
         case To::ListLiteral dobr stmt.push_back(to_list_expression(token))
+        case To::BooleanLiteral dobr stmt.push_back(to_boolean_expression(token))
         case To::Operator dobr stmt.push_back(to_op_expression(token))
         case To::Identifier dobr stmt.push_back(to_value_expression(env, token))
         case To::NL doremi Stmt(stmt)
