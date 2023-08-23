@@ -1,0 +1,11 @@
+let evalstr = ""
+
+loop
+| print GREEN + "Continue or write: " + RED + "'q'" + RESET
+| read out
+| if out == "q"
+| | exit
+| evalstr = "let a = " + out + "\nprint a \nexit"
+| eval evalstr
+
+exit

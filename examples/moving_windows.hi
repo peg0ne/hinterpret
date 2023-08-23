@@ -1,0 +1,53 @@
+cfn clear h w
+| let buf = []
+| let internalbuf = []
+| for i h
+| | internalbuf = []
+| | for j w
+| | | internalbuf += " "
+| | buf += internalbuf
+| return = buf
+
+cfn window x y w h color screen
+| let a = 0
+| let b = 0
+| let buf = []
+| let internalbuf = []
+| for i 25
+| | internalbuf = []
+| | a = screen at i
+| | for j 48
+| | | b = a at j
+| | | if i >= y and j >= x and i < h and j < w
+| | | | b = color + " " + RESET
+| | | internalbuf += b
+| | buf += internalbuf
+| return = buf
+
+let a = 0
+let b = 0
+let buf = ""
+let x = 0
+let y = 0
+let w = 0
+let h = 0
+for k 40
+| buf = ""
+| clear 25 48 screen
+| y = 4 + k
+| h = 10 + k
+| x = 4 + k
+| w = 10 + k
+| window x y w h GREENBG screen screen
+| x = 8 + k
+| w = 18 + k
+| window x 9 w 18 REDBG screen screen
+| for i 25
+| | a = screen at i
+| | for j 48
+| | | b = a at j
+| | | buf += b
+| | buf += "\n"
+| print buf
+
+exit
