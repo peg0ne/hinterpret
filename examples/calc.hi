@@ -5,7 +5,7 @@ loop
 | read out
 | if out == "q"
 | | exit
-| evalstr = "let a = " + out + "\nprint a \nexit"
+| evalstr = "\nprint " + out + "\nexit"
 | eval evalstr
 
 exit
